@@ -1,6 +1,6 @@
 # **The collection of GNC system Algorithms used in Mars landing mission 2020 USA**
 
-![]([https://gifdb.com/images/high/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif](https://github.com/MarioMagdy/Mars-landing-algorithms/blob/main/Assets/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif)).
+![](https://github.com/MarioMagdy/Mars-landing-algorithms/blob/main/Assets/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif).
 
 
 
