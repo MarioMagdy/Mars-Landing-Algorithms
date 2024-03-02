@@ -1,4 +1,5 @@
-# The collection of GNC system Algorithms used in Mars landing mission 2020 USA
+# **The collection of GNC system Algorithms used in Mars landing mission 2020 USA**
+
 ![color picker](https://gifdb.com/images/high/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif).
 
 
