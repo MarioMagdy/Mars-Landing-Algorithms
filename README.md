@@ -1,5 +1,5 @@
 # The collection of GNC system Algorithms used in Mars landing mission 2020 USA
-![color picker](https://giphy.com/gifs/retro-thumbs-up-XreQmk7ETCak0.gif)
+![color picker](https://gifdb.com/images/high/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif).
 
 
 
