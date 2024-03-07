@@ -23,15 +23,16 @@ class MarsEntryGuidance:
         # Gain schedule (example)
         self.K_downrange = 0.1
         self.K_heading = 0.05
+        self.K_roll
 
         # Initial state (placeholder)
         self.state = None
 
-    def set_initial_state(self, x, y, z, v, gamma):
+    def set_initial_state(self, x, y, z, vx, vy, vz, gamma):
         """
         Sets the initial state of the spacecraft.
         """
-        self.state = np.array([x, y, z, v, gamma])
+        self.state = np.array([x, y, z, vx, vy, vz, gamma])
 
     def rho(self, z):
         """
@@ -79,15 +80,16 @@ class MarsEntryGuidance:
             return 110  # Adjust constant value according to actual model
     def A_ref(self):
         # ... (set a constant value or use a calculation based on your scenario) ...
-        return 10.0  # Replace with the appropriate value
+        return 15.9  # Replace with the appropriate value
 
     def dynamics_model(self, state, bank_angle):
         """
         Updates the state of the spacecraft based on the dynamics model.
         """
-        x, y, z, v, gamma = state
+        x, y, z, vx, vy, vz, gamma = state
 
         # Compute forces
+        v= np.sqrt(vx**2+vy**2+vz**2)
         gravity = self.G * self.mass / (z + self.R_mars)**2
         mach = v / np.sqrt(gamma * 287 * self.T(z))  # Calculate Mach number based on temperature
         alpha = bank_angle  # Assume angle of attack equals bank angle
@@ -95,13 +97,16 @@ class MarsEntryGuidance:
         drag = -0.5 * C_d * self.A_ref() * self.rho(z) * v**2 / v
         lift = 0.5 * self.C_l(mach, alpha) * self.A_ref ()* self.rho(z) * v**2 * np.cos(bank_angle)
 
-        # Compute acceleration
-        acc = np.array([0, 0, -gravity + drag + lift / self.mass])
-
-        # Compute new state
-        new_state = state + acc * self.dt
-        new_state[4] = np.arctan2(new_state[3,2], new_state[3,0])  # Update flight path angle
-
+        acc_x = drag * vx / v
+        acc_y = drag * vy / v + lift * np.sin(bank_angle)
+        acc_z = -gravity + drag * vz / v + lift * np.cos(bank_angle)
+        acc = np.array([acc_x, acc_y, acc_z])
+        # Compute new state using Runge-Kutta method
+        k1 = acc * self.dt
+        k2 = self.dynamics_model(state + k1 / 2, bank_angle)[3:] * self.dt
+        k3 = self.dynamics_model(state + k2 / 2, bank_angle)[3:] * self.dt
+        k4 = self.dynamics_model(state + k3, bank_angle)[3:] * self.dt
+        new_state = state + (k1 + 2 * k2 + 2 * k3 + k4) / 6
         return new_state
 
     def predict_state(self, state, bank_angle):
@@ -120,8 +125,7 @@ class MarsEntryGuidance:
         # Downrange error
         error_downrange = predicted_state[0] - self.target_x
 
-        # Heading error (implement based on your target)
-        error_heading = 0.0  # placeholder
+       
 
         # Adaptive gain based on flight phase (example)
         if state[2] > -50e3:
@@ -130,13 +134,45 @@ class MarsEntryGuidance:
             self.K_downrange = 0.1
 
         # Update bank angle with downrange and heading control
-        bank_angle = bank_angle - self.K_downrange * error_downrange - self.K_heading * error_heading
+        bank_angle = bank_angle - self.K_downrange * error_downrange 
 
         # Limit bank angle
         bank_angle = np.clip(bank_angle, -self.max_bank_angle, self.max_bank_angle)
 
         return bank_angle
+    def bank_angle_control2(self, state, predicted_state):
+            """
+            Calculates and adjusts the bank angle based on the predicted state and error correction.
+            """
+            # Downrange error
+            # error_downrange = predicted_state[0] - self.target_x
 
+           
+
+            # Range-to-go
+            R = np.sqrt(state[0]**2 + state[1]**2 + state[2]**2) - self.R_mars
+
+
+            # Flight path angle
+            gamma = np.arctan2(state[5], state[3])
+            # Lift-to-drag ratio
+            L_D = 0.24
+
+            # Predicted range-to-go
+            R_p = predicted_state[0]
+
+            # Desired vertical component of lift-to-drag ratio
+            L_D_v = L_D*np.sin(gamma)+self.K_downrange * (R_p - R) / L_D 
+
+
+
+            # Bank angle from vertical component of lift-to-drag ratio
+            bank_angle = np.arccos((L_D_v) / L_D) * self.K_roll
+
+            # Limit bank angle
+            bank_angle = np.clip(bank_angle, -self.max_bank_angle, self.max_bank_angle)
+
+            return bank_angle
     def guide(self):
             """
             Executes the guidance loop to steer the spacecraft towards the target point.
@@ -172,7 +208,7 @@ def test_guidance(target_x, target_y, target_z):
     Tests the MarsEntryGuidance class with a given target point.
     """
     # Set mass and initial state (adjust values as needed)
-    mass = 100  # kg
+    mass = 2200  # kg
     # initial_state = np.array([0, 0, -100000, 5000, -1.22])  # Initial position, velocity, and flight path angle
 
     # Create guidance object and set target
