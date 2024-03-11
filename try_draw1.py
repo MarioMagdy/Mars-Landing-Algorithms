@@ -9,15 +9,16 @@ slower= 500000
 # Constants
 
 MARS_GRAVITY = -3.71  # m/s^2
-AIR_RESISTANCE_COEFF = 0.005  # (adjustable for different air densities)
-LEFT_DRAG_COEFF = 0.001  # (adjustable for spacecraft design)
+AIR_RESISTANCE_COEFF = 0.05  # (adjustable for different air densities) UNUSED
+LEFT_DRAG_COEFF = 0.01  # (adjustable for spacecraft design)  UNUSED
+LD_C = 10 # (adjustable)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCALE = 10  # meters per pixel (adjust for visual representation)
 
 # User input (replace with prompts and error handling)
 initial_altitude = 5000.0  # meters
-initial_horizontal_velocity = 10000.0  # m/s (positive to the right)
+initial_horizontal_velocity = 40000.0  # m/s (positive to the right)
 
 initial_vertical_velocity = -50000.0  # m/s (negative for downward)
 max_thrust = 10.0  # m/s^2
@@ -111,7 +112,7 @@ def handle_thrust_controls(keys_pressed):
 import math
 
 
-# def apply_air_resistance_v1(dt):
+# def apply_air_resistance_v2_v1(dt):
 #     global x_velocity, y_velocity
 #     # Simplified air resistance model (consider more complex models for better accuracy)
 #     air_resistance_x = AIR_RESISTANCE_COEFF * abs(x_velocity) * x_velocity
@@ -120,48 +121,48 @@ import math
 #     y_velocity -= air_resistance_y * dt
 
 
-def apply_air_resistance_v2(dt, density=0.02):
+
+import math
+
+def apply_air_resistance_v2(dt, density=0.02):  # Density is in kg/m^3 (adjustable)
     """
-    Calculates and applies air resistance force to the spacecraft's velocity.
+    Calculates and applies air resistance force to each component of the spacecraft's velocity.
 
     Args:
         dt: Timestep (seconds).
+        v: The spacecraft's velocity as a NumPy array (m/s). Can be 1D (scalar) or 3D (vector).
         density: The air density (kg/m^3). Defaults to 0.02 (approximate Martian surface density).
     """
-    global x_velocity, y_velocity
     # Reference speed of sound in Martian atmosphere (adjustable)
     speed_of_sound = 240  # m/s
 
-    # Calculate the magnitude of the velocity vector
-    speed = np.linalg.norm([x_velocity, y_velocity])  # Access global velocities
-    v= np.array([x_velocity, y_velocity])
+    # Separate x and y components of velocity
+    global x_velocity, y_velocity 
 
-    # Use a more realistic model: Modified Newtonian Drag Equation (account for Mach number)
-    if speed > 0:
-        mach_number = speed / speed_of_sound  # Mach number
 
-        # Drag coefficient (adjustable based on spacecraft shape and altitude)
-        # This is a simplified example, consider using lookup tables for different Mach numbers
-        # and vehicle geometries for better accuracy. 
-        if mach_number <= 1:
-            drag_coefficient = 1.0  # Drag coefficient for subsonic speeds
-        else:
-            drag_coefficient = 0.5  # Simplified drag coefficient for supersonic speeds (adjust based on data)
+    # Calculate individual air resistance forces for x and y components
+    if abs(x_velocity) > 0:  # Apply air resistance only for positive x-velocity (assuming right is positive)
+        drag_coefficient_x = calculate_drag_coefficient(x_velocity / speed_of_sound) * LD_C # Adjust based on Mach number for x-direction
+        air_resistance_force_x = -0.5 * density * drag_coefficient_x * np.pi * (x_velocity**2)
+        x_velocity +=(abs(x_velocity)/x_velocity) * air_resistance_force_x * dt / mass  # Apply force as acceleration and update x-velocity
+    
+    if abs(y_velocity) > 0:  # Apply air resistance only for positive y-velocity (assuming up is positive)
+        drag_coefficient_y = calculate_drag_coefficient(y_velocity / speed_of_sound)* LD_C  # Adjust based on Mach number for y-direction
+        air_resistance_force_y = -0.5 * density * drag_coefficient_y * np.pi * (y_velocity**2)
+        y_velocity += (abs(y_velocity)/y_velocity) * air_resistance_force_y * dt / mass  # Apply force as acceleration and update y-velocity
 
-        # Calculate air resistance force
-        air_resistance_force = -0.5 * density * drag_coefficient * np.pi * (speed**2)
+    return np.array([x_velocity, y_velocity])  # Return the updated velocity components
 
-        # Apply the force as acceleration (considering mass)
-        # Replace "mass" with the actual mass of your spacecraft
-        acceleration = air_resistance_force / mass
-        v -= acceleration * dt  # Update velocity (subtract due to opposing force)
-        
-    [x_velocity, y_velocity] = v
-
-    # Limit velocity to zero at very low speeds (optional)
-    # v = np.clip(v, a_min=0.0, a_max=None)  # Clip velocity to prevent negative values
-
-    # return v
+def calculate_drag_coefficient(mach_number):  # Replace with your implementation for calculating drag coefficient based on Mach number
+    """
+    This function is a placeholder. You should replace it with your actual implementation 
+    to calculate the drag coefficient based on the Mach number.
+    """
+    # This is a simplified example, consider using lookup tables or more detailed models
+    if mach_number <= 1:
+        return 1.0  # Drag coefficient for subsonic speeds
+    else:
+        return 0.5  # Simplified drag coefficient for supersonic speeds (adjust based on data)
 
 
 
@@ -251,9 +252,7 @@ while running:
     # print(spacecraft_x, y_position)
 
     apply_gravity(dt)
-
-    apply_air_resistance(dt)
-
+    apply_air_resistance_v2(dt)
     apply_thrust(dt)
     update_position(dt)
 
