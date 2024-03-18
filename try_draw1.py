@@ -3,7 +3,8 @@ import pygame
 import math
 import numpy as np
 
-slower= 500000
+
+slower= 200000
 
 
 # Constants
@@ -16,6 +17,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCALE = 10  # meters per pixel (adjust for visual representation)
 
+# TODO: Get the real speeds
 # User input (replace with prompts and error handling)
 initial_altitude = 5000.0  # meters
 initial_horizontal_velocity = 40000.0  # m/s (positive to the right)
@@ -122,7 +124,7 @@ import math
 
 
 
-import math
+
 
 def apply_air_resistance_v2(dt, density=0.02):  # Density is in kg/m^3 (adjustable)
     """
@@ -234,6 +236,7 @@ clock = pygame.time.Clock()
 running = True
 landed = False
 crashed = False
+# input()
 while running:
     mass = spacecraft_mass + fuel_mass
     for event in pygame.event.get():
@@ -268,8 +271,8 @@ while running:
 
 
     # Check for landing or crash
-    if y_position <= 50:  # Adjust based on landing area height
-        if y_velocity < -1.0:  # Tolerable landing speed
+    if y_position <= 500:  # Adjust based on landing area height
+        if abs(y_velocity) < 20.0:  # Tolerable landing speed
             landed = True
             color = YELLOW
         else:
