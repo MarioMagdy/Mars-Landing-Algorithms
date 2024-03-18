@@ -4,7 +4,7 @@ import numpy as np
 accel_data = np.array([[-0.1147, -0.1304, 0.9873], [-0.12, -0.42, 0.95], [-0.5, 0, 0.60]])
 gyro_data = np.radians(np.array([[85, 90, 43], [20, 40, 40],[10, 0, 40]]))
 
-# Time step (dt) in seconds (adjust as needed)
+# Time step (dt) in seconds 
 dt = 0.01  # Example: 10 ms
 
 # Initialize velocity, position, and orientation (roll, pitch, yaw)
@@ -32,9 +32,9 @@ for i in range(1, len(accel_data)):
     orientation[1] = alpha * (orientation[1] + gyro_pitch * dt) + (1 - alpha) * accel_pitch
     orientation[2] = alpha * (orientation[2] + gyro_yaw * dt) + (1 - alpha) * accel_yaw
 
-# Convert orientation to degrees (if needed)
-orientation_degrees = np.degrees(orientation)
+    # Convert orientation to degrees (if needed)
+    orientation_degrees = np.degrees(orientation)
 
-print("Estimated position (x, y, z):", position)
-print("Estimated velocity (vx, vy, vz):", velocity)
-print("Estimated orientation (roll, pitch, yaw):", orientation_degrees)
+    print("Estimated position (x, y, z):", position)
+    print("Estimated velocity (vx, vy, vz):", velocity)
+    print("Estimated orientation (roll, pitch, yaw):", orientation_degrees)
