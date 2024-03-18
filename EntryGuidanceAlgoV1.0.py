@@ -40,9 +40,9 @@ class MarsEntryGuidance:
         x, y, z, vx, vy, vz = state
         v= np.sqrt(vx**2+vy**2+vz**2)
         if v >= 3500:
-            return np.deg2rad(75);
+            return np.deg2rad(75)
         elif v <= 1500:
-            return np.deg2rad(50);
+            return np.deg2rad(50)
         else:
             return np.deg2rad(50 + (75-50)*(v-1500)/(3500-1500))
     def rho(self, z):
@@ -234,7 +234,7 @@ class MarsEntryGuidance:
                 else:
                     
                     # Calculate and adjust bank angle
-                    bank_angle = self.bank_angle_control(self.state, predicted_state)
+                    bank_angle = self.bank_angle_control2(self.state, predicted_state)
                     print(f'{bank_angle}')
                     # Apply bank angle and update state
                     self.state = self.dynamics_model(self.state, bank_angle)
@@ -245,89 +245,92 @@ class MarsEntryGuidance:
             abs(self.state[1] - self.target_y) < self.tolerance and \
             abs(self.state[2] - self.target_z) < self.tolerance:
                 print("Successful landing!")
+                print(f'{bank_angle}')
             else:
                 print("Landing accuracy outside tolerance.")
+                print(f'{bank_angle}')
 
 
+MNG= MarsEntryGuidance(mass=2200)
+MNG.set_initial_state(0.0, 0.0, 125e3, 4000.0, -1000.0, -250.0)
+MNG.guide()
+# def test_guidance_algorithm(mars_guidance, initial_state, target_state, tolerance, max_iterations=1000):
+#   """
+#   This function tests the Mars entry guidance algorithm by simulating the descent process.
+
+#   Args:
+#       mars_guidance: An instance of your MarsEntryGuidance class.
+#       initial_state: A numpy array representing the initial state of the spacecraft (x, y, z, vx, vy, vz).
+#       target_state: A numpy array representing the target landing point (x, y, z).
+#       tolerance: The maximum allowed error in each dimension for landing success (x, y, z).
+#       max_iterations: The maximum number of iterations allowed for the simulation.
+
+#   Returns:
+#       A dictionary containing:
+#           success: True if the spacecraft landed within tolerance, False otherwise.
+#           iterations: The number of iterations it took to reach the target or reach the maximum.
+#           final_state: The state of the spacecraft at the end of the simulation.
+#   """
+#   # Set initial state
+#   mars_guidance.set_initial_state(*initial_state)
+
+#   # Simulation loop
+#   for iteration in range(max_iterations):
+#     # Predict state at target point
+#     predicted_state = mars_guidance.predict_state(mars_guidance.state, mars_guidance.reference_bank_angle(mars_guidance.state))
+
+#     # Check landing success
+#     landing_error = np.abs(predicted_state[:3] - target_state[:3])
+#     if all(error <= tolerance for error in landing_error):
+#       return {
+#           "success": True,
+#           "iterations": iteration + 1,
+#           "final_state": mars_guidance.state
+#       }
+
+#     # Calculate and adjust bank angle
+#     mars_guidance.bank_angle_control(mars_guidance.state, predicted_state)
+
+#     # Update state
+#     mars_guidance.state = mars_guidance.dynamics_model(mars_guidance.state, mars_guidance.bank_angle_control(mars_guidance.state, predicted_state))
+
+#   # Reached maximum iterations without landing
+# #   return {
+# #       "success": False,
+# #       "iterations": max_iterations,
+# #       "final_state": mars_guidance.state
+# #   }
 
 
-def test_guidance_algorithm(mars_guidance, initial_state, target_state, tolerance, max_iterations=1000):
-  """
-  This function tests the Mars entry guidance algorithm by simulating the descent process.
+# # Define initial state (replace with your desired values)
+# initial_state = np.array([0.0, 0.0, 125e3, 4000.0, -1000.0, -250.0])  # x, y, z, vx, vy, vz (meters)
 
-  Args:
-      mars_guidance: An instance of your MarsEntryGuidance class.
-      initial_state: A numpy array representing the initial state of the spacecraft (x, y, z, vx, vy, vz).
-      target_state: A numpy array representing the target landing point (x, y, z).
-      tolerance: The maximum allowed error in each dimension for landing success (x, y, z).
-      max_iterations: The maximum number of iterations allowed for the simulation.
+# # Justification for initial state:
+# #  - x, y: We assume a zero initial lateral position (0 meters) relative to the target.
+# #  - z: Starting at -125 km above the Martian surface is a typical entry altitude for missions.
+# #  - vx, vy: A hypersonic entry velocity of 4000 m/s (around Mach 12) is realistic for interplanetary travel.
+# #  - vz: A negative vz (-250 m/s) indicates a downward velocity component.
 
-  Returns:
-      A dictionary containing:
-          success: True if the spacecraft landed within tolerance, False otherwise.
-          iterations: The number of iterations it took to reach the target or reach the maximum.
-          final_state: The state of the spacecraft at the end of the simulation.
-  """
-  # Set initial state
-  mars_guidance.set_initial_state(*initial_state)
+# # Define target landing point (replace with your desired values)
+# target_state = np.array([0.0, 0.0, -10.0])  # x, y, z (meters)
 
-  # Simulation loop
-  for iteration in range(max_iterations):
-    # Predict state at target point
-    predicted_state = mars_guidance.predict_state(mars_guidance.state, mars_guidance.reference_bank_angle(mars_guidance.state))
+# # Tolerance for landing accuracy (replace with your desired values)
+# tolerance = np.array([100.0, 100.0, 5.0])  # x, y, z (meters)
 
-    # Check landing success
-    landing_error = np.abs(predicted_state[:3] - target_state[:3])
-    if all(error <= tolerance for error in landing_error):
-      return {
-          "success": True,
-          "iterations": iteration + 1,
-          "final_state": mars_guidance.state
-      }
+# # Justification for tolerance:
+# #  - x, y: A landing accuracy of 100 meters in the horizontal plane is achievable, but challenging.
+# #  - z: A vertical tolerance of 5 meters is a demanding target for pinpoint landing.
 
-    # Calculate and adjust bank angle
-    mars_guidance.bank_angle_control(mars_guidance.state, predicted_state)
+# # Maximum iterations for the simulation
+# max_iterations = 1000
 
-    # Update state
-    mars_guidance.state = mars_guidance.dynamics_model(mars_guidance.state, mars_guidance.bank_angle_control(mars_guidance.state, predicted_state))
+# # Create an instance of your MarsEntryGuidance class
+# mars_guidance = MarsEntryGuidance(mass=2200.0)  # Replace mass with your spacecraft mass
 
-  # Reached maximum iterations without landing
-#   return {
-#       "success": False,
-#       "iterations": max_iterations,
-#       "final_state": mars_guidance.state
-#   }
+# # Test the guidance algorithm using the test function
+# # test_guidance_algorithm(mars_guidance, initial_state, target_state, tolerance, max_iterations)
 
-
-# Define initial state (replace with your desired values)
-initial_state = np.array([0.0, 0.0, 125e3, 4000.0, -1000.0, -250.0])  # x, y, z, vx, vy, vz (meters)
-
-# Justification for initial state:
-#  - x, y: We assume a zero initial lateral position (0 meters) relative to the target.
-#  - z: Starting at -125 km above the Martian surface is a typical entry altitude for missions.
-#  - vx, vy: A hypersonic entry velocity of 4000 m/s (around Mach 12) is realistic for interplanetary travel.
-#  - vz: A negative vz (-250 m/s) indicates a downward velocity component.
-
-# Define target landing point (replace with your desired values)
-target_state = np.array([0.0, 0.0, -10.0])  # x, y, z (meters)
-
-# Tolerance for landing accuracy (replace with your desired values)
-tolerance = np.array([100.0, 100.0, 5.0])  # x, y, z (meters)
-
-# Justification for tolerance:
-#  - x, y: A landing accuracy of 100 meters in the horizontal plane is achievable, but challenging.
-#  - z: A vertical tolerance of 5 meters is a demanding target for pinpoint landing.
-
-# Maximum iterations for the simulation
-max_iterations = 1000
-
-# Create an instance of your MarsEntryGuidance class
-mars_guidance = MarsEntryGuidance(mass=2200.0)  # Replace mass with your spacecraft mass
-
-# Test the guidance algorithm using the test function
-test_guidance_algorithm(mars_guidance, initial_state, target_state, tolerance, max_iterations)
-
-# # Print the test results
-# print(f"Landing Success: {test_result['success']}")
-# print(f"Iterations: {test_result['iterations']}")
-# print(f"Final State:\n {test_result['final_state']}")
+# # # Print the test results
+# # print(f"Landing Success: {test_result['success']}")
+# # print(f"Iterations: {test_result['iterations']}")
+# # print(f"Final State:\n {test_result['final_state']}")
