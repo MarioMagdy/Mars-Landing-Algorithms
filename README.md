@@ -7,7 +7,6 @@
 - Navitaion
 
 
-#### The repo is used to document the algorithms as we develop them
 
 ## Contents:
 1. Under_dev: Contains the scripts that are currently being developed and not yet working.
