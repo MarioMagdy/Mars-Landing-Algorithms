@@ -1,4 +1,3 @@
-
 import pygame
 import math
 import numpy as np
@@ -17,7 +16,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCALE = 10  # meters per pixel (adjust for visual representation)
 
-# TODO: Get the real speeds
+# TODO: Get the accurate velocities
 # User input (replace with prompts and error handling)
 initial_altitude = 5000.0  # meters
 initial_horizontal_velocity = 40000.0  # m/s (positive to the right)
