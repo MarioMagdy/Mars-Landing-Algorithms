@@ -1,0 +1,40 @@
+import numpy as np
+
+# Sample accelerometer and gyroscope data (replace with your actual data)
+accel_data = np.array([[-0.1147, -0.1304, 0.9873], [-0.12, -0.42, 0.95], [-0.5, 0, 0.60]])
+gyro_data = np.radians(np.array([[85, 90, 43], [20, 40, 40],[10, 0, 40]]))
+
+# Time step (dt) in seconds (adjust as needed)
+dt = 0.01  # Example: 10 ms
+
+# Initialize velocity, position, and orientation (roll, pitch, yaw)
+velocity = np.zeros(3)
+position = np.zeros(3)
+orientation = np.zeros(3)  # Roll, pitch, yaw (in radians)
+
+# Complementary filter coefficient (alpha)
+alpha = 0.97 # Adjust based on sensor noise and desired response
+
+# Integration loop
+for i in range(1, len(accel_data)):
+    # Numerical integration for velocity (using trapezoidal rule)
+    velocity += (accel_data[i] + accel_data[i - 1]) * dt / 2
+
+    # Numerical integration for position
+    position += (velocity + velocity[i - 1]) * dt / 2
+
+    # Complementary filter for orientation (roll and pitch)
+    gyro_roll, gyro_pitch, gyro_yaw = gyro_data[i]
+    accel_roll, accel_pitch, accel_yaw = accel_data[i]
+
+    # Update orientation using complementary filter
+    orientation[0] = alpha * (orientation[0] + gyro_roll * dt) + (1 - alpha) * accel_roll
+    orientation[1] = alpha * (orientation[1] + gyro_pitch * dt) + (1 - alpha) * accel_pitch
+    orientation[2] = alpha * (orientation[2] + gyro_yaw * dt) + (1 - alpha) * accel_yaw
+
+# Convert orientation to degrees (if needed)
+orientation_degrees = np.degrees(orientation)
+
+print("Estimated position (x, y, z):", position)
+print("Estimated velocity (vx, vy, vz):", velocity)
+print("Estimated orientation (roll, pitch, yaw):", orientation_degrees)
