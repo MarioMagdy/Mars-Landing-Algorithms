@@ -16,4 +16,3 @@
 ------------------------------------
 _______________________
 ![](https://github.com/MarioMagdy/Mars-landing-algorithms/blob/main/Assets/spongebob-thumbs-up-jlviquvxsdx3wcyf.gif).
-
