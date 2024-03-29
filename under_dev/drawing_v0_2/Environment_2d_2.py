@@ -42,25 +42,14 @@ RED = (133, 40, 20)  # For crash landing
 YELLOW = (255, 255, 0)  # For successful landing
 
 
-# Global variables for thruster power levels (0 to 100%)
-left_vertical_thruster_power = 0.0
-right_vertical_thruster_power = 0.0
-up_horizontal_thruster_power = 0.0
-down_horizontal_thruster_power = 0.0
-
-
 # New global variable for spacecraft orientation (in degrees)
 spacecraft_orientation = 0.0
 
+left_wing_up_thruster_power, left_wing_down_thruster_power, right_wing_up_thruster_power,right_wing_down_thruster_power, top_left_thruster_power, top_right_thruster_power , bottom_left_thruster_power, bottom_right_thruster_power = (0,0,0,0,0,0,0,0)
 
 control_ori_st= 0.5
 control_pos_st= 5
 
-
-
-
-
-import math
 
 def apply_thrust(dt):
     global x_velocity, y_velocity, fuel_remaining, spacecraft_orientation
@@ -412,6 +401,12 @@ while running:
     spacecraft_y = SCREEN_HEIGHT - int(y_position / SCALE)  # Y-axis flipped for visual representation
     
     draw_spacecraft(screen, spacecraft_x, spacecraft_y,spacecraft_orientation)
+
+
+    left_vertical_thruster_power=   left_wing_up_thruster_power - left_wing_down_thruster_power 
+    right_vertical_thruster_power= right_wing_up_thruster_power - right_wing_down_thruster_power
+    up_horizontal_thruster_power = top_right_thruster_power - top_left_thruster_power
+    down_horizontal_thruster_power = bottom_left_thruster_power - bottom_right_thruster_power
 
     # Draw speed text on top of the spacecraft
     draw_spacecraft_info(screen, spacecraft_x, spacecraft_y, x_velocity, y_velocity,spacecraft_orientation,
