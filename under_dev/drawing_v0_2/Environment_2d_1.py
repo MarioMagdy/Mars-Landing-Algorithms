@@ -18,23 +18,24 @@ SCALE = 10  # meters per pixel (adjust for visual representation)
 initial_altitude = 5000.0  # meters
 initial_horizontal_velocity = 0.0  # m/s (positive to the right)
 
-initial_vertical_velocity = -50000.0  # m/s (negative for downward)
-max_thrust = 10.0  # m/s^2
+initial_vertical_velocity = -100.0  # m/s (negative for downward)
+max_thrust = 1000.0  # m/s^2
 spacecraft_mass = 500 #
-fuel_mass = 100.0  # kg
+fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
 fuel_consumption_rate = 1.0  # kg/s per unit of thrust (adjustable for engine efficiency)
 
 
 # Simulation variables
-x_position = 600  # meters
+x_position = 1000  # meters
 y_position = initial_altitude  # meters (matches initial altitude)
 x_velocity = initial_horizontal_velocity
 y_velocity = initial_vertical_velocity
-fuel_remaining = fuel_mass
+fuel_remaining = fuel_mass # Hard to calculate real number so this is going to be arbtirary number 
+total_fuel_time = 300 * slower  # Hard to calculate real number so this is going to be arbtirary number 
 thrust_x = 0.0  # m/s^2 (horizontal thrust)
 thrust_y = 0.0  # m/s^2 (vertical thrust)
 
-# Colors
+# Colors    
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (133, 40, 20)  # For crash landing
@@ -52,12 +53,58 @@ down_horizontal_thruster_power = 0.0
 spacecraft_orientation = 0.0
 
 
+control_ori_st= 0.5
+control_pos_st= 5
+
+# def apply_thrust(dt):
+#     global x_velocity, y_velocity, fuel_remaining, spacecraft_orientation
+#     global left_vertical_thruster_power, right_vertical_thruster_power
+#     global up_horizontal_thruster_power, down_horizontal_thruster_power
+#     global x_velocity, y_velocity, fuel_remaining, thrust_x, thrust_y, spacecraft_orientation
+#     # Limit thrust based on fuel availability
+#     if fuel_remaining > 0:
+#         # Calculate the actual thrust force based on the power level (0 to 100%) and max thrust capability
+#         left_vertical_force = (left_vertical_thruster_power / 100.0) * max_thrust
+#         right_vertical_force = (right_vertical_thruster_power / 100.0) * max_thrust
+#         up_horizontal_force = (up_horizontal_thruster_power / 100.0) * max_thrust
+#         down_horizontal_force = (down_horizontal_thruster_power / 100.0) * max_thrust
+        
+#         # The net horizontal thrust is the difference between the left and right vertical thruster forces
+#         net_horizontal_thrust = right_vertical_force - left_vertical_force
+        
+#         # The net vertical thrust is the difference between the up and down horizontal thruster forces
+#         net_vertical_thrust = up_horizontal_force - down_horizontal_force
+        
+#         # Update velocities based on the net thrust forces
+#         x_velocity += net_horizontal_thrust * dt
+#         y_velocity += (net_vertical_thrust + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
+        
+#         # Update the spacecraft's orientation based on the difference in thrust between opposing thrusters
+#         # The rotation rate could be adjusted by a constant to simulate the spacecraft's moment of inertia
+#         horizontal_rotation_rate = (left_vertical_force - right_vertical_force) * dt * 0.5
+#         vertical_rotation_rate = (down_horizontal_force - up_horizontal_force) * dt * 0.5
+        
+#         # Update the spacecraft orientation
+#         spacecraft_orientation += horizontal_rotation_rate + vertical_rotation_rate
+        
+#         # Fuel consumption is based on the total thrust exerted by all thrusters
+#         total_thrust = left_vertical_force + right_vertical_force + up_horizontal_force + down_horizontal_force
+#         fuel_remaining -= total_thrust * dt / fuel_consumption_rate
+            
+#         # Update velocities based on the net thrust forces
+#         x_velocity += net_horizontal_thrust * dt
+#         y_velocity += (net_vertical_thrust + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
+#     else:
+#         thrust_x = 0.0
+#         thrust_y = 0.0
+
+
 
 def apply_thrust(dt):
     global x_velocity, y_velocity, fuel_remaining, spacecraft_orientation
     global left_vertical_thruster_power, right_vertical_thruster_power
     global up_horizontal_thruster_power, down_horizontal_thruster_power
-    global x_velocity, y_velocity, fuel_remaining, thrust_x, thrust_y, spacecraft_orientation, right_thruster_power, left_thruster_power
+    global x_velocity, y_velocity, fuel_remaining, thrust_x, thrust_y, spacecraft_orientation
     # Limit thrust based on fuel availability
     if fuel_remaining > 0:
         # Calculate the actual thrust force based on the power level (0 to 100%) and max thrust capability
@@ -66,40 +113,87 @@ def apply_thrust(dt):
         up_horizontal_force = (up_horizontal_thruster_power / 100.0) * max_thrust
         down_horizontal_force = (down_horizontal_thruster_power / 100.0) * max_thrust
         
-        # The net horizontal thrust is the difference between the left and right vertical thruster forces
-        net_horizontal_thrust = right_vertical_force - left_vertical_force
+        # Calculate the net force differences for rotation
+        net_vertical_force_difference = right_vertical_force - left_vertical_force
+        net_horizontal_force_difference = down_horizontal_force - up_horizontal_force
         
-        # The net vertical thrust is the difference between the up and down horizontal thruster forces
-        net_vertical_thrust = up_horizontal_force - down_horizontal_force
-        
-        # Update velocities based on the net thrust forces
-        x_velocity += net_horizontal_thrust * dt
-        y_velocity += (net_vertical_thrust + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
-        
-        # Update the spacecraft's orientation based on the difference in thrust between opposing thrusters
+        # Update the spacecraft's orientation based on the net force differences
         # The rotation rate could be adjusted by a constant to simulate the spacecraft's moment of inertia
-        horizontal_rotation_rate = (left_vertical_force - right_vertical_force) * dt * 0.05
-        vertical_rotation_rate = (down_horizontal_force - up_horizontal_force) * dt * 0.05
-        
-        # Update the spacecraft orientation
+        horizontal_rotation_rate = net_vertical_force_difference * dt * control_ori_st
+        vertical_rotation_rate = net_horizontal_force_difference * dt * control_ori_st
         spacecraft_orientation += horizontal_rotation_rate + vertical_rotation_rate
+        
+        # Convert orientation to radians for trigonometric functions
+        orientation_radians = math.radians(spacecraft_orientation)
+        
+        # Calculate the effective thrust components based on the spacecraft's orientation
+        effective_horizontal_thrust = math.cos(orientation_radians) * net_vertical_force_difference
+        effective_vertical_thrust = math.sin(orientation_radians) * net_horizontal_force_difference
+        
+        # Update velocities based on the effective thrust forces
+        x_velocity += effective_horizontal_thrust * dt
+        y_velocity += (effective_vertical_thrust + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
         
         # Fuel consumption is based on the total thrust exerted by all thrusters
         total_thrust = left_vertical_force + right_vertical_force + up_horizontal_force + down_horizontal_force
-        fuel_remaining -= total_thrust * dt / fuel_consumption_rate
-            
-        # Update velocities based on the net thrust forces
-        x_velocity += net_horizontal_thrust * dt
-        y_velocity += (net_vertical_thrust + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
+        print(total_thrust * dt / fuel_consumption_rate)
+        fuel_remaining -= 1/total_fuel_time
     else:
         thrust_x = 0.0
         thrust_y = 0.0
 
 
 
-def draw_speed_text(screen, x, y, x_velocity, y_velocity, font_size=16, font_color=WHITE):
+import math
+
+def apply_thrust(dt):
+    global x_velocity, y_velocity, fuel_remaining, spacecraft_orientation
+    global left_vertical_thruster_power, right_vertical_thruster_power
+    global up_horizontal_thruster_power, down_horizontal_thruster_power
+
+    # Limit thrust based on fuel availability
+    if fuel_remaining > 0:
+        # Calculate the actual thrust force based on the power level (0 to 100%) and max thrust capability
+        left_vertical_thruster_force = -(left_vertical_thruster_power / 100.0) * max_thrust
+        right_vertical_thruster_force = -(right_vertical_thruster_power / 100.0) * max_thrust
+        up_horizontal_thruster_force = -(up_horizontal_thruster_power / 100.0) * max_thrust
+        down_horizontal_thruster_force =- (down_horizontal_thruster_power / 100.0) * max_thrust
+        
+        # Calculate the net force differences for rotation
+        net_vertical_thruster_force = right_vertical_thruster_force - left_vertical_thruster_force
+        net_horizontal_thruster_force = down_horizontal_thruster_force - up_horizontal_thruster_force
+
+        net_rotation_force = net_horizontal_thruster_force + net_vertical_thruster_force
+        
+        # Update the spacecraft's orientation based on the net force differences
+        rotation_rate = net_rotation_force * dt * control_ori_st
+        spacecraft_orientation += rotation_rate
+        
+        # Convert orientation to radians for trigonometric functions
+        orientation_radians = math.radians(spacecraft_orientation)
+        
+        print(net_vertical_thruster_force,net_horizontal_thruster_force)
+        # Calculate the effective thrust components in the inertial frame based on the spacecraft's orientation
+        effective_thrust_x = (math.cos(orientation_radians) * net_horizontal_thruster_force) + (math.sin(orientation_radians) * net_vertical_thruster_force)
+        effective_thrust_y = (math.cos(orientation_radians) * net_vertical_thruster_force) + (math.sin(orientation_radians) * net_horizontal_thruster_force)
+        
+        # Update velocities based on the effective thrust forces in the inertial frame
+        x_velocity += effective_thrust_x * dt
+        y_velocity += (effective_thrust_y + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
+        
+        # Fuel consumption is based on the total thrust exerted by all thrusters
+        total_thrust = left_vertical_thruster_force + right_vertical_thruster_force + up_horizontal_thruster_force + down_horizontal_thruster_force
+        fuel_remaining -= 1/total_fuel_time
+    else:
+        thrust_x = 0.0
+        thrust_y = 0.0
+
+
+
+
+def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left_thruster, right_thruster, up_thruster, down_thruster, font_size=16, font_color=WHITE):
     """
-    Draws text displaying the spacecraft's x and y-axis velocities below it.
+    Draws text displaying the spacecraft's velocities, orientation, and thruster levels.
 
     Args:
         screen: The Pygame display surface.
@@ -107,30 +201,56 @@ def draw_speed_text(screen, x, y, x_velocity, y_velocity, font_size=16, font_col
         y: The y-coordinate of the spacecraft's center.
         x_velocity: The spacecraft's x-axis velocity (m/s).
         y_velocity: The spacecraft's y-axis velocity (m/s).
+        orientation: The spacecraft's current orientation (degrees).
+        left_thruster: The power level of the left vertical thruster (%).
+        right_thruster: The power level of the right vertical thruster (%).
+        up_thruster: The power level of the up horizontal thruster (%).
+        down_thruster: The power level of the down horizontal thruster (%).
         font_size: The size of the font used to display the text (default: 16).
-        font_color: The color of the text (default: BLACK).
+        font_color: The color of the text (default: WHITE).
     """
     font = pygame.font.SysFont(None, font_size)
 
-    # Format the text with one decimal place for velocity
+    # Format the text for velocity, orientation, and thruster levels
     x_velocity_text = f"X-Velocity: {x_velocity:.1f} m/s"
     y_velocity_text = f"Y-Velocity: {y_velocity:.1f} m/s"
+    orientation_text = f"Orientation: {-orientation:.1f}°"
+    left_thruster_text = f"Left Thrust: {left_thruster}%"
+    right_thruster_text = f"Right Thrust: {right_thruster}%"
+    up_thruster_text = f"Up Thrust: {up_thruster}%"
+    down_thruster_text = f"Down Thrust: {down_thruster}%"
 
     # Render the text surfaces
     x_text_surface = font.render(x_velocity_text, True, font_color)
     y_text_surface = font.render(y_velocity_text, True, font_color)
+    orientation_surface = font.render(orientation_text, True, font_color)
+    left_thruster_surface = font.render(left_thruster_text, True, font_color)
+    right_thruster_surface = font.render(right_thruster_text, True, font_color)
+    up_thruster_surface = font.render(up_thruster_text, True, font_color)
+    down_thruster_surface = font.render(down_thruster_text, True, font_color)
 
     # Get the text surface dimensions for positioning
     x_text_width, x_text_height = x_text_surface.get_size()
     y_text_width, y_text_height = y_text_surface.get_size()
+    orientation_width, orientation_height = orientation_surface.get_size()
+    left_thruster_width, left_thruster_height = left_thruster_surface.get_size()
+    right_thruster_width, right_thruster_height = right_thruster_surface.get_size()
+    up_thruster_width, up_thruster_height = up_thruster_surface.get_size()
+    down_thruster_width, down_thruster_height = down_thruster_surface.get_size()
 
     # Place the text surfaces below the spacecraft with some offset
-    x_text_x = x - x_text_width // 2  # Center the text horizontally below the spacecraft
-    y_text_y = y + x_text_height + 20  # Position the text slightly below the spacecraft
+    text_x = x - max(x_text_width, y_text_width, orientation_width, left_thruster_width, right_thruster_width, up_thruster_width, down_thruster_width) // 2
+    text_y = y + x_text_height + 20  # Position the text slightly below the spacecraft
 
     # Blit the text surfaces onto the screen
-    screen.blit(x_text_surface, (x_text_x, y_text_y))
-    screen.blit(y_text_surface, (x_text_x, y_text_y + y_text_height))
+    screen.blit(x_text_surface, (text_x, text_y))
+    screen.blit(y_text_surface, (text_x, text_y + y_text_height))
+    screen.blit(orientation_surface, (text_x, text_y + 2 * y_text_height))
+    screen.blit(left_thruster_surface, (text_x, text_y + 3 * y_text_height))
+    screen.blit(right_thruster_surface, (text_x, text_y + 4 * y_text_height))
+    screen.blit(up_thruster_surface, (text_x, text_y + 5 * y_text_height))
+    screen.blit(down_thruster_surface, (text_x, text_y + 6 * y_text_height))
+
 
 
 
@@ -140,43 +260,59 @@ def draw_speed_text(screen, x, y, x_velocity, y_velocity, font_size=16, font_col
 
 def handle_thrust_controls(keys_pressed):
     """
-    Checks for keyboard clicks and updates thrust based on user input.
+    Checks for keyboard clicks and updates thruster power levels based on user input.
 
     Args:
         keys_pressed: A dictionary containing the state of all pressed keys (True for pressed, False for not pressed).
 
-    Returns:
-        A tuple containing the horizontal and vertical thrust values (m/s^2).
+    Modifies:
+        Updates the global variables for the thruster power levels.
     """
     global max_thrust
+    global left_vertical_thruster_power, right_vertical_thruster_power
+    global up_horizontal_thruster_power, down_horizontal_thruster_power
 
-    horizontal_thrust = 0.0
-    vertical_thrust = 0.0
+    # Reset thruster powers to zero
+    left_vertical_thruster_power = 0.0
+    right_vertical_thruster_power = 0.0
+    up_horizontal_thruster_power = 0.0
+    down_horizontal_thruster_power = 0.0
 
     # Adjust these key codes based on your desired controls
-    if keys_pressed[pygame.K_LEFT]:  # Left arrow key
-        horizontal_thrust = -max_thrust  # Negative for left thrust
+    # Vertical thrusters (left and right) control horizontal movement and orientation
+    if keys_pressed[pygame.K_a]:  # 'A' key for left vertical thruster
+        left_vertical_thruster_power = 100.0  # Full power
 
-    if keys_pressed[pygame.K_RIGHT]:  # Right arrow key
-        horizontal_thrust = max_thrust
+    if keys_pressed[pygame.K_d]:  # 'D' key for right vertical thruster
+        right_vertical_thruster_power = 100.0  # Full power
 
-    if keys_pressed[pygame.K_UP]:  # Up arrow key
-        vertical_thrust = max_thrust
+    # Horizontal thrusters (up and down) control vertical movement and orientation
+    if keys_pressed[pygame.K_w]:  # 'W' key for up horizontal thruster
+        up_horizontal_thruster_power = 100.0  # Full power
 
-    return horizontal_thrust, vertical_thrust
-
-
-
-
-
+    if keys_pressed[pygame.K_s]:  # 'S' key for down horizontal thruster
+        down_horizontal_thruster_power = 100.0  # Full power
 
 
-def update_orientation(dt, thrust_x):
+
+
+
+
+
+def update_orientation(dt, left_vertical_thruster_power, right_vertical_thruster_power, up_horizontal_thruster_power, down_horizontal_thruster_power):
     global spacecraft_orientation
-    # Adjust the orientation based on the horizontal thrust
-    # The multiplier can be adjusted to represent the sensitivity of the spacecraft's rotation
-    orientation_change = thrust_x * dt * 0.1  # This is an arbitrary value for rotation sensitivity
-    spacecraft_orientation += orientation_change
+    # Calculate the net force differences for rotation
+    net_vertical_force_difference = right_vertical_thruster_power - left_vertical_thruster_power
+    net_horizontal_force_difference = down_horizontal_thruster_power - up_horizontal_thruster_power
+
+    # Calculate the orientation change based on the net force differences
+    # The multipliers can be adjusted to represent the sensitivity of the spacecraft's rotation
+    horizontal_orientation_change = net_vertical_force_difference * dt * 0.05  # Arbitrary value for horizontal rotation sensitivity
+    vertical_orientation_change = net_horizontal_force_difference * dt * 0.05  # Arbitrary value for vertical rotation sensitivity
+
+    # Update the spacecraft orientation based on the combined orientation changes
+    spacecraft_orientation += horizontal_orientation_change + vertical_orientation_change
+
 
 
 
@@ -340,9 +476,9 @@ while running:
 
     # Example usage in the main loop
     keys_pressed = pygame.key.get_pressed()
-    horizontal_thrust, vertical_thrust = handle_thrust_controls(keys_pressed)
-    x_velocity += horizontal_thrust * dt
-    y_velocity += vertical_thrust * dt
+    handle_thrust_controls(keys_pressed)
+    # x_velocity += horizontal_thrust * dt
+    # y_velocity += vertical_thrust * dt
 
     apply_thrust(dt)
     update_position(dt)
@@ -355,7 +491,9 @@ while running:
     draw_spacecraft(screen, spacecraft_x, spacecraft_y,spacecraft_orientation)
 
     # Draw speed text on top of the spacecraft
-    draw_speed_text(screen, spacecraft_x, spacecraft_y, x_velocity, y_velocity)
+    draw_spacecraft_info(screen, spacecraft_x, spacecraft_y, x_velocity, y_velocity,spacecraft_orientation,
+                         left_vertical_thruster_power,right_vertical_thruster_power,
+                         up_horizontal_thruster_power,down_horizontal_thruster_power)
 
 
     # Check for landing or crash
