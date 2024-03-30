@@ -4,7 +4,7 @@ import numpy as np
 
 slower= 2000
 
-atmo_layering_number = 15
+atmo_layering_number = 5
 
 time_from_start = 0
 
