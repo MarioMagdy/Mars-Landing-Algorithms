@@ -8,8 +8,9 @@ import math
 slower= 2000
 
 
+atmo_layering_number = 8
 
-
+time_from_start = 0
 
 # Define colors
 WHITE = (255, 255, 255)
@@ -51,7 +52,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (133, 40, 20)  # For crash landing
 YELLOW = (255, 255, 0)  # For successful landing
-
+GREY = (170, 170, 170) # For
 
 # New global variable for spacecraft orientation (in degrees)
 spacecraft_orientation = 0.0
@@ -326,62 +327,165 @@ def update_position(dt):
     x_position += x_velocity * dt
     y_position += y_velocity * dt
 
-# def draw_environment(screen):
-#     """
-#     Draws the Martian surface on the Pygame screen.
 
-#     Customize this function to create a more visually appealing environment:
-#     - Use an image for the Martian surface.
-#     - Draw a polygon with a gradient to represent the Martian terrain.
-#     - Add craters, rocks, and other Martian features (optional).
-#     """
-#     # Fill the background with a gradient color (e.g., reddish-brown)
-#     pygame.draw.rect(screen, (100, 50, 0), (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
 
-#     # Optionally, add some Martian features (e.g., craters, rocks, etc.)
-#     # You can use additional functions to draw these features
+# Constants for colors (you can adjust these)
+BLACK = (0, 0, 0)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+MARS_SURFACE_COLOR = (115, 55, 0)  # Rusty Mars surface color
+ATMOSPHERE_COLOR = (255, 200, 180, 60)  # Semi-transparent white for atmosphere
+alphas = [ (220/np.power(i+1,0.3)) for i in range(atmo_layering_number)]
 
-#     # Example: Draw a large crater
-#     pygame.draw.circle(screen, (150, 100, 50), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 100)
 
-#     # Example: Draw scattered rocks
-#     rock_positions = [(200, 300), (400, 250), (600, 350)]
-#     for rock_x, rock_y in rock_positions:
-#         pygame.draw.circle(screen, (120, 80, 40), (rock_x, rock_y), 10)
 
-#     # Example: Add texture to the surface (e.g., subtle noise pattern)
-#     # You can create a custom texture or use an image
+def draw_stars(screen,amount=3):
 
-#     # Remember to adjust colors, sizes, and positions to achieve the desired look
+        # Draw stars in the background
+        for _ in range(amount):
+            star_x = np.random.randint(0, screen.get_width())
+            star_y = np.random.randint(0, screen.get_height())
+            pygame.draw.circle(screen, WHITE, (star_x, star_y), 1)
 
 
 def draw_environment(screen):
     """
-    Draws the Martian surface on the Pygame screen.
+    Draws a more realistic Martian environment on the Pygame screen.
 
-    Customize this function to create a more visually appealing environment:
-    - Use an image for the Martian surface.
-    - Draw a polygon with a gradient to represent the Martian terrain.
-    - Add craters, rocks, and other Martian features (optional).
+    Customize this function to create a visually appealing representation.
+    Suggestions:
+        - Use an image for the Martian surface.
+        - Add layers of atmosphere (semi-transparent) and texture.
+        - Incorporate Martian features like craters and mountains.
     """
-    # Fill the background with a reddish-brown gradient color to represent the Martian surface
-    pygame.draw.rect(screen, (100, 50, 0), (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen.fill(BLACK)  # Fill the background with black
 
-    # Optionally, add some Martian features (e.g., craters, rocks, etc.)
-    # You can use additional functions to draw these features
+    draw_stars(screen,3)
 
-    # Example: Draw a large crater
-    pygame.draw.circle(screen, (150, 100, 50), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 100)
+    # Draw three layers of atmosphere
+    
+    for i in range(atmo_layering_number):
+        atmosphere_color = ATMOSPHERE_COLOR
+        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
+                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
 
-    # Example: Draw scattered rocks
-    rock_positions = [(200, 300), (400, 250), (600, 350)]
-    for rock_x, rock_y in rock_positions:
-        pygame.draw.circle(screen, (120, 80, 40), (rock_x, rock_y), 10)
+        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
+        atmosphere_surface.set_alpha(alphas[i])
+        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
+        screen.blit(atmosphere_surface, (0, 0))
 
-    # Example: Add texture to the surface (e.g., subtle noise pattern)
-    # You can create a custom texture or use an image
 
-    # Remember to adjust colors, sizes, and positions to achieve the desired look
+
+
+
+    # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
+    mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
+    
+    # Create a copy of the texture with adjusted opacity (60%)
+    textured_surface = mars_texture.copy()
+    textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
+
+    #
+
+    # Draw a solid rectangle for the Martian ground color
+    pygame.draw.rect(screen, MARS_SURFACE_COLOR, (0, screen.get_height() - 50, screen.get_width(), 50))
+
+    screen.blit(textured_surface, ( 0,screen.get_height() - 50))
+
+    # Add additional features (e.g., craters, mountains, rocks) for realism
+    # Customize this part further based on your desired visual style
+
+
+
+
+def draw_environment(screen):
+    global time_from_start, dt
+    """
+    Draws an enhanced Martian environment on the Pygame screen.
+
+    Customize this function to create a visually appealing representation.
+    Suggestions:
+        - Use an image for the Martian surface (texture).
+        - Add layers of atmosphere (semi-transparent) and texture.
+        - Incorporate Martian features like craters and mountains.
+    """
+    screen.fill(BLACK)  # Fill the background with black
+    time_from_start+=dt
+    current_height = y_position
+
+    screen.fill(BLACK)  # Fill the background with black
+
+    draw_stars(screen,3)
+
+    # Draw three layers of atmosphere
+    
+    for i in range(atmo_layering_number):
+        atmosphere_color = ATMOSPHERE_COLOR
+        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
+                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
+
+        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
+        atmosphere_surface.set_alpha(alphas[i])
+        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
+        screen.blit(atmosphere_surface, (0, 0))
+
+
+
+
+
+    # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
+    mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
+    
+    # Create a copy of the texture with adjusted opacity (60%)
+    textured_surface = mars_texture.copy()
+    textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
+
+    #
+
+    # Draw a solid rectangle for the Martian ground color
+    pygame.draw.rect(screen, MARS_SURFACE_COLOR, (0, screen.get_height() - 50, screen.get_width(), 50))
+
+    screen.blit(textured_surface, ( 0,screen.get_height() - 50))
+    # Display mission information (time from start and current height)
+    font = pygame.font.Font(None, 24)
+    info_text = f"Time: {time_from_start:.2f} s  |  Height: {current_height/1000:.3f} km"
+    text_surface = font.render(info_text, True, GREY)
+    screen.blit(text_surface, (10, 10))
+
+    # Draw a scale (ruler) for pixels to meters
+    scale_length_pixels = 100
+    scale_length_meters = SCALE*scale_length_pixels/1000
+    scale_start_x = 10
+    scale_end_x = scale_start_x + scale_length_pixels
+    pygame.draw.line(screen, WHITE, (scale_start_x, 30), (scale_end_x, 30), 2)
+    font_small = pygame.font.Font(None, 20)
+    scale_label = f"{scale_length_meters} km"
+    label_surface = font_small.render(scale_label, True, GREY)
+    screen.blit(label_surface, (scale_start_x, 35))
+
+    
+    # Draw the altitude scale (ruler) on the right side
+    draw_ruler(screen, current_height)
+
+
+def draw_ruler(screen, current_height):
+    scale_x = screen.get_width() - 20
+    scale_y_start = 20
+    scale_y_end = screen.get_height() - 50
+    pygame.draw.line(screen, GREY, (scale_x-50, scale_y_start), (scale_x-50, scale_y_end), 2)
+    font_size = 18
+
+    # Add labeled intervals to the scale
+    font_small = pygame.font.Font(None, font_size)
+    for i_pixel in range(50, SCREEN_HEIGHT-scale_y_start-30,50):
+        print(i_pixel)
+        label = f"{i_pixel*SCALE//1000} km"
+        label_surface = font_small.render(label, True, GREY)
+        pygame.draw.line(screen, GREY,( (scale_x - 42), (scale_y_end - i_pixel+font_size//3)),( (scale_x - 50), (scale_y_end - i_pixel+font_size//3)) , 1)
+        screen.blit(label_surface, ((scale_x - 40), (scale_y_end - i_pixel) ))
+        
+
+
 
 
 
