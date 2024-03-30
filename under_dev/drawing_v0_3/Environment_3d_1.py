@@ -2,7 +2,13 @@ import pygame
 import math
 import numpy as np
 
-slower= 2000
+
+
+###TODO: 
+# To make it more accurate we can make the gravity to the center of the planet not downwards so the orbiting effect can happen
+
+
+slower= 1000
 
 atmo_layering_number = 15
 
@@ -14,10 +20,9 @@ THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Constants
 MARS_GRAVITY = -3.71  # m/s^2
-AIR_RESISTANCE_COEFF = 0.001 # (adjustable for different air densities) UNUSED
-LEFT_DRAG_COEFF = 0.001 # (adjustable for spacecraft design)  UNUSED
-LD_C = 2 # (adjustable)
-SCREEN_WIDTH = 900
+AIR_RESISTANCE_COEFF = 3 # (adjustable for different air densities) 
+LD_C = 10 # (adjustable)
+SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 SCALE = 200  # meters per pixel (adjust for visual representation)
 
@@ -28,7 +33,7 @@ initial_horizontal_velocity = 6000.0  # m/s (positive to the right)
 
 initial_vertical_velocity = -5333.0  # m/s (negative for downward)
 max_thrust = 100.0  # m/s^2
-spacecraft_mass = 500 # kg
+spacecraft_mass = 1025  # kg
 fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
 fuel_consumption_rate = 1.0  # kg/s per unit of thrust (adjustable for engine efficiency)
 
@@ -57,7 +62,7 @@ spacecraft_orientation = 0.0
  right_wing_down_thruster_power, top_left_thruster_power, top_right_thruster_power , 
  bottom_left_thruster_power, bottom_right_thruster_power) = (0,0,0,0,0,0,0,0)
 
-control_ori_st= 0.05
+control_ori_st= 0.3
 control_pos_st= 0.05
 
 
@@ -265,52 +270,74 @@ def update_orientation(dt):
     spacecraft_orientation += orientation_change
 
 
+### NEW: in 3_1
+def get_mars_atmospheric_density(altitude):
+    """
+    Calculates the atmospheric density on Mars at a given altitude.
+
+    Args:
+        altitude: Altitude in meters.
+
+    Returns:
+        Density in kg/m^3.
+    """
+    # Define the altitude ranges for the lower and upper atmosphere
+    lower_atmosphere_altitude = 7000  # meters
+
+    # Calculate temperature and pressure based on altitude
+    if altitude <= lower_atmosphere_altitude:
+        # Lower atmosphere (surface to 7,000 meters)
+        temperature = -31 - 0.000998 * altitude
+        pressure = 0.699 * np.exp(-0.00009 * altitude)
+    else:
+        # Upper atmosphere (above 7,000 meters)
+        temperature = -23.4 - 0.00222 * altitude
+        pressure = 0.699 * np.exp(-0.00009 * altitude)
+
+    # Calculate density using the ideal gas law
+    density = pressure / (0.1921 * (temperature + 273.1))
+
+    return density
 
 
 
-def apply_air_resistance_v2(dt, density=0.02):  # Density is in kg/m^3 (adjustable)
+
+def apply_air_resistance_v2(dt):
     """
     Calculates and applies air resistance force to each component of the spacecraft's velocity.
 
     Args:
         dt: Timestep (seconds).
-        v: The spacecraft's velocity as a NumPy array (m/s). Can be 1D (scalar) or 3D (vector).
         density: The air density (kg/m^3). Defaults to 0.02 (approximate Martian surface density).
     """
-    # Reference speed of sound in Martian atmosphere (adjustable)
-    speed_of_sound = 240  # m/s
+    global y_velocity ,x_velocity,y_position
 
-    # Separate x and y components of velocity
-    global x_velocity, y_velocity 
+    density = get_mars_atmospheric_density(y_position)*3
 
+    # Adjust drag coefficients based on Mach number (placeholder values)
+    drag_coefficient_x = calculate_drag_coefficient(x_velocity / 240)  # Adjust for Mars speed of sound
+    drag_coefficient_y = calculate_drag_coefficient(y_velocity / 240)
 
-    # Calculate individual air resistance forces for x and y components
-    if abs(x_velocity) > 0:  # Apply air resistance only for positive x-velocity (assuming right is positive)
-        drag_coefficient_x = calculate_drag_coefficient(x_velocity / speed_of_sound) * LD_C # Adjust based on Mach number for x-direction
-        air_resistance_force_x = -0.5 * density * drag_coefficient_x * np.pi * (x_velocity**2)
-        x_velocity +=(abs(x_velocity)/x_velocity) * air_resistance_force_x * dt / mass  # Apply force as acceleration and update x-velocity
-    
-    if abs(y_velocity) > 0:  # Apply air resistance only for positive y-velocity (assuming up is positive)
-        drag_coefficient_y = calculate_drag_coefficient(y_velocity / speed_of_sound)* LD_C  # Adjust based on Mach number for y-direction
-        air_resistance_force_y = -0.5 * density * drag_coefficient_y * np.pi * (y_velocity**2)
-        y_velocity += (abs(y_velocity)/y_velocity) * air_resistance_force_y * dt / mass  # Apply force as acceleration and update y-velocity
+    # Calculate air resistance forces
+    air_resistance_force_x = -0.5 * density * drag_coefficient_x * np.pi * (x_velocity**2) *AIR_RESISTANCE_COEFF
+    air_resistance_force_y = 0.5 * density * drag_coefficient_y * np.pi * (y_velocity**2) * AIR_RESISTANCE_COEFF
 
-    return np.array([x_velocity, y_velocity])  # Return the updated velocity components
+    # Update velocity components
+    x_velocity += air_resistance_force_x * dt / mass
+    y_velocity += air_resistance_force_y * dt / mass
+
+    return np.array([x_velocity, y_velocity])
 
 
-def calculate_drag_coefficient(mach_number):  # Replace with your implementation for calculating drag coefficient based on Mach number
+def calculate_drag_coefficient(mach_number):
     """
-    This function is a placeholder. You should replace it with your actual implementation 
-    to calculate the drag coefficient based on the Mach number.
+    Placeholder function to calculate drag coefficient based on Mach number.
+    Replace with your actual implementation.
     """
-    # This is a simplified example, consider using lookup tables or more detailed models
     if mach_number <= 1:
         return 1.0  # Drag coefficient for subsonic speeds
     else:
-        return 0.5  # Simplified drag coefficient for supersonic speeds (adjust based on data)
-
-
-
+        return 0.5  # Simplified drag coefficient for supersonic speeds
 
 def apply_gravity(dt):
     global y_velocity
@@ -370,6 +397,8 @@ def draw_environment(screen):
     # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
     mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
     mars_background = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_background.png').convert_alpha()
+    mars_background = pygame.transform.scale(mars_background, (SCREEN_WIDTH,SCREEN_HEIGHT))
+ 
     # Create a copy of the texture with adjusted opacity (60%)
     textured_surface = mars_texture.copy()
     textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
@@ -397,20 +426,23 @@ def draw_environment(screen):
     label_surface = font_small.render(scale_label, True, GREY)
     screen.blit(label_surface, (scale_start_x, 35))
 
-    # Draw layers of atmosphere 
-    for i in range(atmo_layering_number):
-        atmosphere_color = ATMOSPHERE_COLOR
-        atmosphere_rect = pygame.Rect(0, screen.get_height()-((i+1)*(SCREEN_HEIGHT)//atmo_layering_number)
-                                      , screen.get_width(), screen.get_height()-((i*(SCREEN_HEIGHT)//atmo_layering_number)))
+
+    ### COMMENTED TO REDUCE REQUIRED RESOURCES
+
+    # # Draw layers of atmosphere 
+    # for i in range(atmo_layering_number):
+    #     atmosphere_color = ATMOSPHERE_COLOR
+    #     atmosphere_rect = pygame.Rect(0, screen.get_height()-((i+1)*(SCREEN_HEIGHT)//atmo_layering_number)
+    #                                   , screen.get_width(), screen.get_height()-((i*(SCREEN_HEIGHT)//atmo_layering_number)))
         
 
 
-        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
+    #     atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
 
 
-        atmosphere_surface.set_alpha(alphas[i])
-        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
-        screen.blit(atmosphere_surface, (0, 0))
+    #     atmosphere_surface.set_alpha(alphas[i])
+    #     pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
+    #     screen.blit(atmosphere_surface, (0, 0))
     
 
     
