@@ -125,15 +125,21 @@ class MarsLanderControl:
 
     # Function to calculate lift & Drag force on Mars
     def calculate_aerodynamic_forces_mars(self, velocity, angle_of_attack, altitude):
-        atmospheric_density = self.get_atmospheric_density_mars()
+        # Placeholder function to calculate aerodynamic forces on Mars
+        
+        atmospheric_density = self.get_atmospheric_density_mars(altitude)
         dynamic_pressure_mars = 0.5 * atmospheric_density * velocity**2
         lift_force_mars = dynamic_pressure_mars * area_mars * lift_coefficient_mars * np.sin(angle_of_attack)
-        drag_force_mars = dynamic_pressure_mars * area_mars * lift_coefficient_mars * np.cos(angle_of_attack)
+        drag_force_mars = dynamic_pressure_mars * area_mars * drag_coefficient_mars * np.cos(angle_of_attack)
         return lift_force_mars, drag_force_mars
 
-
-    # Function to adjust lift vector and descent angle for Mars entry
     def mars_entry_control(self, velocity, position, angle_of_attack):
+        # Placeholder function to control entry to Mars
+        
+        # Define default values for adjustments
+        vertical_velocity_change_mars = 0.0
+        horizontal_velocity_change_mars = 0.0
+
         # Adjust angle of attack based on altitude specific to Mars entry profile
         if position > 80000:  # High altitude on Mars, low angle for shallow entry
             angle_of_attack = np.radians(5)
@@ -143,13 +149,13 @@ class MarsLanderControl:
             angle_of_attack = np.radians(10)
         
         # Calculate lift force on Mars and adjust trajectory
-        lift_force_mars = self.calculate_lift_force_mars(self, velocity, angle_of_attack)
+        lift_force_mars, _ = self.calculate_aerodynamic_forces_mars(velocity, angle_of_attack, position)
         vertical_velocity_change_mars = (lift_force_mars / mass_mars) * np.cos(angle_of_attack)
         horizontal_velocity_change_mars = (lift_force_mars / mass_mars) * np.sin(angle_of_attack)
     
         return vertical_velocity_change_mars, horizontal_velocity_change_mars, angle_of_attack
 
-    
+
     # Function to simulate heat shield jettison
     def jettison_heat_shield(self, mass_with_shield):
         mass_without_shield = mass_with_shield - HEAT_SHIELD_MASS
@@ -160,7 +166,7 @@ class MarsLanderControl:
         """
         Simulates the lander's descent in a loop.
         """
-
+ 
         # Control logic: determine desired orientation
         desired_orientation = np.array([1, 0, 0, 0])  # Quaternion for upright
 
@@ -170,7 +176,6 @@ class MarsLanderControl:
             
         self.calculate_thrust_forces()
         self.calculate_required_thrust()
-        print(f"Required Thrust per Thruster: {self.thrust_force_per_thruster:.2f} N")
         self.fire_thrusters()
         
         time.sleep(2)  # Simulating descent
@@ -181,33 +186,51 @@ class MarsLanderControl:
         # Update state
         self.update_pid()
         
-
+        # Simulation loop for Mars entry
+        velocity_mars = 5500  # m/s, initial entry velocity for Mars mission
+        position_mars = 120000  # Starting at high altitude specific to Mars entry profile
+        angle_of_attack_mars = np.radians(5)  # Initial angle of attack
+        
+        # Simulate Mars entry phase with control adjustments and variable atmospheric density
+        entry_velocity_mars = velocity_mars  # m/s, initial entry velocity for Mars mission
+        jettison_altitude = 70000  # m, altitude at which heat shield is jettisoned
+    
+        
+        for t in np.arange(0, t_max, dt):
+            
+            lift_force_mars, drag_force_mars = self.calculate_aerodynamic_forces_mars(velocity_mars, angle_of_attack_mars, position_mars)
+            # Calculate aerodynamic forces and adjust trajectory
+            vertical_vel_change, horizontal_vel_change, angle_of_attack_mars = self.mars_entry_control(velocity_mars, position_mars, angle_of_attack_mars)
+            
+            # Update velocity and position based on gravity and aerodynamic forces (simplified model)
+            velocity_change_due_to_gravity = g_mars * dt # vertical velocity change
+            velocity_change_due_to_drag = drag_force_mars / mass_mars * dt # Horizontal velocity change
+            
+            velocity_mars -= (velocity_change_due_to_gravity + velocity_change_due_to_drag)
+            
+            # Update velocity and position
+            velocity_mars -= vertical_vel_change * dt
+            position_mars -= horizontal_vel_change * dt
+            
+            # Update thruster magnitude based on current state (placeholder function)
+            self.calculate_required_thrust()
+            
+            # Fire thrusters based on updated magnitude
+            self.fire_thrusters()
+            
+            # Print current state or perform further actions as needed
+            print(f"Time: {t:.2f}s, Altitude: {position_mars:.2f}m, Velocity: {velocity_mars:.2f}m/s, Angle of Attack: {np.degrees(angle_of_attack_mars):.2f}°")
+            
+            # Check for termination conditions (e.g., touchdown)
+            if position_mars <= 0:
+                print("Touchdown! Mars entry phase complete.")
+                break
 if __name__ == "__main__":
     MarsLander = MarsLanderControl()
-    MarsLander.prev_error = 0.0  # Initialize previous error for derivative term
     MarsLander.main()
     
-    # Simulate Mars entry phase with control adjustments and variable atmospheric density
-    entry_velocity_mars = 5500  # m/s, initial entry velocity for Mars mission
-    jettison_altitude = 70000  # m, altitude at which heat shield is jettisoned
     
-    # Initialize variables for Mars simulation
-    velocity_mars = entry_velocity_mars
-    position_mars = 120000  # Starting at high altitude specific to Mars entry profile
-    
-    # Simulation loop for Mars entry with aerodynamic forces calculation
-    time_step_mars = dt  # s, simulation time step
-    total_time_mars = t_max  # s, total simulation time for Mars entry
-    angle_of_attack_mars = np.radians(5)  # Initial angle of attack
 
-    for t in range(0, total_time_mars, time_step_mars):
-        lift_force_mars, drag_force_mars = MarsLander.calculate_aerodynamic_forces_mars(velocity_mars, angle_of_attack_mars, position_mars)
-    
-    # Update velocity and position based on gravity and aerodynamic forces (simplified model)
-    velocity_change_due_to_gravity = g_mars * time_step_mars
-    velocity_change_due_to_drag = drag_force_mars / mass_mars * time_step_mars
-    
-    velocity_mars -= (velocity_change_due_to_gravity + velocity_change_due_to_drag)
 
 
 
