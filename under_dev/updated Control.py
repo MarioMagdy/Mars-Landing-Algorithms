@@ -225,7 +225,10 @@ class MarsLanderControl:
             if position_mars <= 0:
                 print("Touchdown! Mars entry phase complete.")
                 break
-
+if __name__ == "__main__":
+    MarsLander = MarsLanderControl()
+    MarsLander.main()
+    
     
 
 
