@@ -87,8 +87,12 @@ def apply_thrust(dt):
         # Calculate the actual thrust force for each thruster based on the power level (0 to 100%) and max thrust capability
         left_wing_vertical_force = (left_wing_up_thruster_power - left_wing_down_thruster_power) / 100.0 * max_thrust
         right_wing_vertical_force = (right_wing_up_thruster_power - right_wing_down_thruster_power) / 100.0 * max_thrust
-        top_horizontal_force = (top_right_thruster_power - top_left_thruster_power) / 100.0 * max_thrust
+
+        # Problem TODO:
+        top_horizontal_force = ( top_left_thruster_power - top_right_thruster_power) / 100.0 * max_thrust
         bottom_horizontal_force = (bottom_right_thruster_power - bottom_left_thruster_power) / 100.0 * max_thrust
+
+
         
         # Calculate the net force differences for rotation and movement
         net_vertical_force = right_wing_vertical_force + left_wing_vertical_force
@@ -325,19 +329,6 @@ def draw_environment(screen):
 
 
 
-thruster_offsets = {
-    'left_wing_up': {'angle': 0, 'position': (-10, 0)},
-    'left_wing_down': {'angle': 180, 'position': (-10, 0)},
-    'right_wing_up': {'angle': 0, 'position': (10, 0)},
-    'right_wing_down': {'angle': 180, 'position': (10, 0)},
-    'top_left': {'angle': 90, 'position': (0, -10)},
-    'top_right': {'angle': -90, 'position': (0, -10)},
-    'bottom_left': {'angle': 90, 'position': (0, 10)},
-    'bottom_right': {'angle': -90, 'position': (0, 10)}
-}
-
-
-
 
 
 
@@ -368,12 +359,51 @@ def rotate_point(cx, cy, x, y, angle):
 
 
 def draw_spacecraft(screen, x, y, angle):
-    points = [(x, y), (x - 10, y + 20), (x + 10, y + 20)]
+    # Define the spacecraft shape with a distinct front tip
+    points = [
+        (x, y - 20),  # Tip of the spacecraft (nose)
+        (x - 12, y + 15),  # Left base
+        (x + 12, y + 15)   # Right base
+    ]
+    
+    # Rotate each point around the spacecraft's center to get the correct orientation
     rotated_points = []
     for point in points:
         rotated_point = rotate_point(x, y, point[0], point[1], math.radians(angle))
         rotated_points.append(rotated_point)
+    
+    # Draw the spacecraft on the screen
     pygame.draw.polygon(screen, WHITE, rotated_points)
+
+
+
+def draw_spacecraft(screen, x, y, angle):
+    # Define the spacecraft shape with more details
+    points = [
+        (x, y - 30),  # Tip of the spacecraft (nose)
+        (x - 5, y - 10),  # Start of left wing
+        (x - 20, y + 10),  # End of left wing
+        (x - 5, y + 20),  # Left base rear
+        (x + 5, y + 20),  # Right base rear
+        (x + 20, y + 10),  # End of right wing
+        (x + 5, y - 10),  # Start of right wing
+    ]
+    
+    # Rotate each point around the spacecraft's center to get the correct orientation
+    rotated_points = []
+    for point in points:
+        rotated_point = rotate_point(x, y, point[0], point[1], math.radians(angle))
+        rotated_points.append(rotated_point)
+    
+    # Draw the main body of the spacecraft
+    pygame.draw.polygon(screen, WHITE, rotated_points)
+
+    # Draw the cockpit as a circle
+    cockpit_center = rotate_point(x, y, x, y - 20, math.radians(angle))
+    pygame.draw.circle(screen, (0, 255, 0), cockpit_center, 5)
+
+    # Optionally, draw flames for the thrusters if they are active
+    # This would be done in the draw_thrusters_effect function, using similar principles
 
 
 def draw_thrusters_effect(screen, spacecraft_position, spacecraft_orientation, thruster_powers):
@@ -386,10 +416,10 @@ def draw_thrusters_effect(screen, spacecraft_position, spacecraft_orientation, t
         'left_wing_down': {'offset': (-10, 5), 'angle': -90},
         'right_wing_up': {'offset': (10, 5), 'angle': 90},
         'right_wing_down': {'offset': (10, 5), 'angle': -90},
-        'top_left': {'offset': (0, -5), 'angle': 180},
-        'top_right': {'offset': (0, -5), 'angle': 0},
-        'bottom_left': {'offset': (0, 20), 'angle': 180},
-        'bottom_right': {'offset': (0, 20), 'angle': 0}
+        'top_left': {'offset': (0, 20), 'angle': 180},
+        'top_right': {'offset': (0, 20), 'angle': 0},
+        'bottom_left': {'offset': (0, -5), 'angle': 180},
+        'bottom_right': {'offset': (0, -5), 'angle': 0}
     }
 
     for thruster, power in thruster_powers.items():

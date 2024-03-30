@@ -78,7 +78,7 @@ def apply_thrust(dt):
         orientation_radians = math.radians(spacecraft_orientation)
         
         # Calculate the effective thrust components in the inertial frame based on the spacecraft's orientation
-        effective_thrust_x = math.cos(orientation_radians) * net_horizontal_force + math.sin(orientation_radians) * net_vertical_force
+        effective_thrust_x = math.cos(orientation_radians) * net_horizontal_force - math.sin(orientation_radians) * net_vertical_force
         effective_thrust_y = math.sin(orientation_radians) * net_horizontal_force + math.cos(orientation_radians) * net_vertical_force
         
         # Update velocities based on the effective thrust forces in the inertial frame
@@ -95,7 +95,8 @@ def apply_thrust(dt):
 
 
 
-def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left_thruster, right_thruster, up_thruster, down_thruster, font_size=16, font_color=WHITE):
+def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left_thruster, 
+                         right_thruster, up_thruster, down_thruster, font_size=16, font_color=WHITE):
     """
     Draws text displaying the spacecraft's velocities, orientation, and thruster levels.
 
