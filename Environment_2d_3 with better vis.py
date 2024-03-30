@@ -16,9 +16,9 @@ THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Constants
 MARS_GRAVITY = -3.71  # m/s^2
-AIR_RESISTANCE_COEFF = 0.05  # (adjustable for different air densities) UNUSED
-LEFT_DRAG_COEFF = 0.01  # (adjustable for spacecraft design)  UNUSED
-LD_C = 10 # (adjustable)
+AIR_RESISTANCE_COEFF = 0.001 # (adjustable for different air densities) UNUSED
+LEFT_DRAG_COEFF = 0.001 # (adjustable for spacecraft design)  UNUSED
+LD_C = 2 # (adjustable)
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 700
 SCALE = 200  # meters per pixel (adjust for visual representation)
@@ -345,53 +345,6 @@ def draw_stars(screen,amount=3):
             star_y = np.random.randint(0, screen.get_height())
             pygame.draw.circle(screen, WHITE, (star_x, star_y), 1)
 
-
-def draw_environment(screen):
-    """
-    Draws a more realistic Martian environment on the Pygame screen.
-
-    Customize this function to create a visually appealing representation.
-    Suggestions:
-        - Use an image for the Martian surface.
-        - Add layers of atmosphere (semi-transparent) and texture.
-        - Incorporate Martian features like craters and mountains.
-    """
-    screen.fill(BLACK)  # Fill the background with black
-
-    draw_stars(screen,3)
-
-    # Draw three layers of atmosphere
-    
-    for i in range(atmo_layering_number):
-        atmosphere_color = ATMOSPHERE_COLOR
-        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
-                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
-
-        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
-        atmosphere_surface.set_alpha(alphas[i])
-        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
-        screen.blit(atmosphere_surface, (0, 0))
-
-
-
-
-
-    # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
-    mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
-    
-    # Create a copy of the texture with adjusted opacity (60%)
-    textured_surface = mars_texture.copy()
-    textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
-
-    #
-
-    # Draw a solid rectangle for the Martian ground color
-    pygame.draw.rect(screen, MARS_SURFACE_COLOR, (0, screen.get_height() - 50, screen.get_width(), 50))
-
-    screen.blit(textured_surface, ( 0,screen.get_height() - 50))
-
-    # Add additional features (e.g., craters, mountains, rocks) for realism
-    # Customize this part further based on your desired visual style
 
 
 
