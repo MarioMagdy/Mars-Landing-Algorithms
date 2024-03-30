@@ -2,13 +2,9 @@ import pygame
 import math
 import numpy as np
 
-import pygame
-import math
-
 slower= 2000
 
-
-atmo_layering_number = 8
+atmo_layering_number = 15
 
 time_from_start = 0
 
@@ -18,9 +14,9 @@ THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Constants
 MARS_GRAVITY = -3.71  # m/s^2
-AIR_RESISTANCE_COEFF = 0.05  # (adjustable for different air densities) UNUSED
-LEFT_DRAG_COEFF = 0.01  # (adjustable for spacecraft design)  UNUSED
-LD_C = 10 # (adjustable)
+AIR_RESISTANCE_COEFF = 0.001 # (adjustable for different air densities) UNUSED
+LEFT_DRAG_COEFF = 0.001 # (adjustable for spacecraft design)  UNUSED
+LD_C = 2 # (adjustable)
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 700
 SCALE = 200  # meters per pixel (adjust for visual representation)
@@ -28,11 +24,11 @@ SCALE = 200  # meters per pixel (adjust for visual representation)
 # TODO: Get the accurate velocities
 # User input (replace with prompts and error handling)
 initial_altitude = 120000.0  # meters
-initial_horizontal_velocity = 0.0  # m/s (positive to the right)
+initial_horizontal_velocity = 40000.0  # m/s (positive to the right)
 
-initial_vertical_velocity = -10000.0  # m/s (negative for downward)
-max_thrust = 1000.0  # m/s^2
-spacecraft_mass = 500 #
+initial_vertical_velocity = -50000.0  # m/s (negative for downward)
+max_thrust = 100.0  # m/s^2
+spacecraft_mass = 500 # kg
 fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
 fuel_consumption_rate = 1.0  # kg/s per unit of thrust (adjustable for engine efficiency)
 
@@ -101,8 +97,6 @@ def apply_thrust(dt):
         # Calculate the actual thrust force for each thruster based on the power level (0 to 100%) and max thrust capability
         left_wing_vertical_force = (left_wing_up_thruster_power - left_wing_down_thruster_power) / 100.0 * max_thrust
         right_wing_vertical_force = (right_wing_up_thruster_power - right_wing_down_thruster_power) / 100.0 * max_thrust
-
-        # Problem TODO:
         top_horizontal_force = (top_right_thruster_power  - top_left_thruster_power) / 100.0 * max_thrust
         bottom_horizontal_force = (bottom_right_thruster_power - bottom_left_thruster_power) / 100.0 * max_thrust
 
@@ -137,7 +131,8 @@ def apply_thrust(dt):
 
 
 
-def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left_thruster, right_thruster, up_thruster, down_thruster, font_size=16, font_color=WHITE):
+def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left_thruster, 
+                         right_thruster, up_thruster, down_thruster, font_size=16, font_color=WHITE):
     """
     Draws text displaying the spacecraft's velocities, orientation, and thruster levels.
 
@@ -185,7 +180,8 @@ def draw_spacecraft_info(screen, x, y, x_velocity, y_velocity, orientation, left
     down_thruster_width, down_thruster_height = down_thruster_surface.get_size()
 
     # Place the text surfaces below the spacecraft with some offset
-    text_x = x - max(x_text_width, y_text_width, orientation_width, left_thruster_width, right_thruster_width, up_thruster_width, down_thruster_width) // 2
+    text_x = x - max(x_text_width, y_text_width, orientation_width, left_thruster_width, 
+                     right_thruster_width, up_thruster_width, down_thruster_width) // 2
     text_y = y + x_text_height + 20  # Position the text slightly below the spacecraft
 
     # Blit the text surfaces onto the screen
@@ -334,8 +330,8 @@ BLACK = (0, 0, 0)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 MARS_SURFACE_COLOR = (115, 55, 0)  # Rusty Mars surface color
-ATMOSPHERE_COLOR = (255, 200, 180, 60)  # Semi-transparent white for atmosphere
-alphas = [ (220/np.power(i+1,0.3)) for i in range(atmo_layering_number)]
+ATMOSPHERE_COLOR = (255, 200, 180, 80)  # Semi-transparent white for atmosphere
+alphas = [ (220/np.power(i+2,0.3)) for i in range(atmo_layering_number)]
 
 
 
@@ -347,53 +343,6 @@ def draw_stars(screen,amount=3):
             star_y = np.random.randint(0, screen.get_height())
             pygame.draw.circle(screen, WHITE, (star_x, star_y), 1)
 
-
-def draw_environment(screen):
-    """
-    Draws a more realistic Martian environment on the Pygame screen.
-
-    Customize this function to create a visually appealing representation.
-    Suggestions:
-        - Use an image for the Martian surface.
-        - Add layers of atmosphere (semi-transparent) and texture.
-        - Incorporate Martian features like craters and mountains.
-    """
-    screen.fill(BLACK)  # Fill the background with black
-
-    draw_stars(screen,3)
-
-    # Draw three layers of atmosphere
-    
-    for i in range(atmo_layering_number):
-        atmosphere_color = ATMOSPHERE_COLOR
-        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
-                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
-
-        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
-        atmosphere_surface.set_alpha(alphas[i])
-        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
-        screen.blit(atmosphere_surface, (0, 0))
-
-
-
-
-
-    # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
-    mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
-    
-    # Create a copy of the texture with adjusted opacity (60%)
-    textured_surface = mars_texture.copy()
-    textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
-
-    #
-
-    # Draw a solid rectangle for the Martian ground color
-    pygame.draw.rect(screen, MARS_SURFACE_COLOR, (0, screen.get_height() - 50, screen.get_width(), 50))
-
-    screen.blit(textured_surface, ( 0,screen.get_height() - 50))
-
-    # Add additional features (e.g., craters, mountains, rocks) for realism
-    # Customize this part further based on your desired visual style
 
 
 
@@ -413,32 +362,16 @@ def draw_environment(screen):
     time_from_start+=dt
     current_height = y_position
 
-    screen.fill(BLACK)  # Fill the background with black
+    draw_stars(screen,2)
 
-    draw_stars(screen,3)
-
-    # Draw three layers of atmosphere
     
-    for i in range(atmo_layering_number):
-        atmosphere_color = ATMOSPHERE_COLOR
-        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
-                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
-
-        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
-        atmosphere_surface.set_alpha(alphas[i])
-        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
-        screen.blit(atmosphere_surface, (0, 0))
-
-
-
-
-
     # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
     mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
-    
+    # mars_background = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_background.png').convert_alpha()
     # Create a copy of the texture with adjusted opacity (60%)
     textured_surface = mars_texture.copy()
     textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
+    
 
     #
 
@@ -446,6 +379,7 @@ def draw_environment(screen):
     pygame.draw.rect(screen, MARS_SURFACE_COLOR, (0, screen.get_height() - 50, screen.get_width(), 50))
 
     screen.blit(textured_surface, ( 0,screen.get_height() - 50))
+    # screen.blit(mars_background, ( 0,0))
     # Display mission information (time from start and current height)
     font = pygame.font.Font(None, 24)
     info_text = f"Time: {time_from_start:.2f} s  |  Height: {current_height/1000:.3f} km"
@@ -463,12 +397,29 @@ def draw_environment(screen):
     label_surface = font_small.render(scale_label, True, GREY)
     screen.blit(label_surface, (scale_start_x, 35))
 
+    # Draw layers of atmosphere 
+    for i in range(atmo_layering_number):
+        atmosphere_color = ATMOSPHERE_COLOR
+        atmosphere_rect = pygame.Rect(0, screen.get_height()-(50 +(i+1)*(SCREEN_HEIGHT-50)//atmo_layering_number)
+                                      , screen.get_width(), screen.get_height()-((50 +i*(SCREEN_HEIGHT-50)//atmo_layering_number)))
+        
+
+
+        atmosphere_surface = pygame.Surface(atmosphere_rect.size, pygame.SRCALPHA)
+
+
+        atmosphere_surface.set_alpha(alphas[i])
+        pygame.draw.rect(atmosphere_surface, atmosphere_color, atmosphere_rect)
+        screen.blit(atmosphere_surface, (0, 0))
+    
+
     
     # Draw the altitude scale (ruler) on the right side
-    draw_ruler(screen, current_height)
+    
+    draw_ruler(screen)
 
 
-def draw_ruler(screen, current_height):
+def draw_ruler(screen):
     scale_x = screen.get_width() - 20
     scale_y_start = 20
     scale_y_end = screen.get_height() - 50
@@ -478,10 +429,11 @@ def draw_ruler(screen, current_height):
     # Add labeled intervals to the scale
     font_small = pygame.font.Font(None, font_size)
     for i_pixel in range(50, SCREEN_HEIGHT-scale_y_start-30,50):
-        print(i_pixel)
+        # print(i_pixel)
         label = f"{i_pixel*SCALE//1000} km"
         label_surface = font_small.render(label, True, GREY)
-        pygame.draw.line(screen, GREY,( (scale_x - 42), (scale_y_end - i_pixel+font_size//3)),( (scale_x - 50), (scale_y_end - i_pixel+font_size//3)) , 1)
+        pygame.draw.line(screen, GREY,( (scale_x - 42), (scale_y_end - i_pixel+font_size//3)),
+                         ( (scale_x - 50), (scale_y_end - i_pixel+font_size//3)) , 1)
         screen.blit(label_surface, ((scale_x - 40), (scale_y_end - i_pixel) ))
         
 
