@@ -358,34 +358,16 @@ def rotate_point(cx, cy, x, y, angle):
     return x_new, y_new
 
 
-def draw_spacecraft(screen, x, y, angle):
-    # Define the spacecraft shape with a distinct front tip
-    points = [
-        (x, y - 20),  # Tip of the spacecraft (nose)
-        (x - 12, y + 15),  # Left base
-        (x + 12, y + 15)   # Right base
-    ]
-    
-    # Rotate each point around the spacecraft's center to get the correct orientation
-    rotated_points = []
-    for point in points:
-        rotated_point = rotate_point(x, y, point[0], point[1], math.radians(angle))
-        rotated_points.append(rotated_point)
-    
-    # Draw the spacecraft on the screen
-    pygame.draw.polygon(screen, WHITE, rotated_points)
-
-
 
 def draw_spacecraft(screen, x, y, angle):
     # Define the spacecraft shape with more details
     points = [
         (x, y - 30),  # Tip of the spacecraft (nose)
         (x - 5, y - 10),  # Start of left wing
-        (x - 20, y + 10),  # End of left wing
-        (x - 5, y + 20),  # Left base rear
-        (x + 5, y + 20),  # Right base rear
-        (x + 20, y + 10),  # End of right wing
+        (x - 15, y + 10),  # End of left wing
+        (x - 5, y + 15),  # Left base rear
+        (x + 5, y + 15),  # Right base rear
+        (x + 15, y + 10),  # End of right wing
         (x + 5, y - 10),  # Start of right wing
     ]
     
