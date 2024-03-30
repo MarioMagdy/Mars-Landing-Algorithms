@@ -2,23 +2,34 @@ import pygame
 import math
 import numpy as np
 
-slower= 20000
+import pygame
+import math
+
+slower= 2000
+
+
+
+
+
+# Define colors
+WHITE = (255, 255, 255)
+THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Constants
 MARS_GRAVITY = -3.71  # m/s^2
 AIR_RESISTANCE_COEFF = 0.05  # (adjustable for different air densities) UNUSED
 LEFT_DRAG_COEFF = 0.01  # (adjustable for spacecraft design)  UNUSED
 LD_C = 10 # (adjustable)
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-SCALE = 10  # meters per pixel (adjust for visual representation)
+SCREEN_WIDTH = 900
+SCREEN_HEIGHT = 700
+SCALE = 200  # meters per pixel (adjust for visual representation)
 
 # TODO: Get the accurate velocities
 # User input (replace with prompts and error handling)
-initial_altitude = 5000.0  # meters
+initial_altitude = 120000.0  # meters
 initial_horizontal_velocity = 0.0  # m/s (positive to the right)
 
-initial_vertical_velocity = -100.0  # m/s (negative for downward)
+initial_vertical_velocity = -10000.0  # m/s (negative for downward)
 max_thrust = 1000.0  # m/s^2
 spacecraft_mass = 500 #
 fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
@@ -26,7 +37,7 @@ fuel_consumption_rate = 1.0  # kg/s per unit of thrust (adjustable for engine ef
 
 
 # Simulation variables
-x_position = 1000  # meters
+x_position = SCALE*100  # meters
 y_position = initial_altitude  # meters (matches initial altitude)
 x_velocity = initial_horizontal_velocity
 y_velocity = initial_vertical_velocity
@@ -45,10 +56,12 @@ YELLOW = (255, 255, 0)  # For successful landing
 # New global variable for spacecraft orientation (in degrees)
 spacecraft_orientation = 0.0
 
-left_wing_up_thruster_power, left_wing_down_thruster_power, right_wing_up_thruster_power,right_wing_down_thruster_power, top_left_thruster_power, top_right_thruster_power , bottom_left_thruster_power, bottom_right_thruster_power = (0,0,0,0,0,0,0,0)
+(left_wing_up_thruster_power, left_wing_down_thruster_power, right_wing_up_thruster_power,
+ right_wing_down_thruster_power, top_left_thruster_power, top_right_thruster_power , 
+ bottom_left_thruster_power, bottom_right_thruster_power) = (0,0,0,0,0,0,0,0)
 
-control_ori_st= 0.5
-control_pos_st= 5
+control_ori_st= 0.05
+control_pos_st= 0.05
 
 
 
@@ -89,37 +102,37 @@ def apply_thrust(dt):
         right_wing_vertical_force = (right_wing_up_thruster_power - right_wing_down_thruster_power) / 100.0 * max_thrust
 
         # Problem TODO:
-        top_horizontal_force = ( top_left_thruster_power - top_right_thruster_power) / 100.0 * max_thrust
+        top_horizontal_force = (top_right_thruster_power  - top_left_thruster_power) / 100.0 * max_thrust
         bottom_horizontal_force = (bottom_right_thruster_power - bottom_left_thruster_power) / 100.0 * max_thrust
 
 
         
         # Calculate the net force differences for rotation and movement
         net_vertical_force = right_wing_vertical_force + left_wing_vertical_force
-        net_horizontal_force = top_horizontal_force + bottom_horizontal_force
+        net_horizontal_force =  (top_horizontal_force + bottom_horizontal_force)
         
         # Update the spacecraft's orientation based on the net force differences
-        rotation_rate = (right_wing_vertical_force - left_wing_vertical_force + bottom_horizontal_force - top_horizontal_force) * dt * control_ori_st
-        spacecraft_orientation -= rotation_rate
+        rotation_rate = (right_wing_vertical_force - left_wing_vertical_force + bottom_horizontal_force - top_horizontal_force) * dt 
+        spacecraft_orientation -= rotation_rate * control_ori_st
+
+        if abs(spacecraft_orientation)>360:
+            spacecraft_orientation -=  (spacecraft_orientation/abs(spacecraft_orientation))*360
         
         # Convert orientation to radians for trigonometric functions
         orientation_radians = math.radians(spacecraft_orientation)
         
         # Calculate the effective thrust components in the inertial frame based on the spacecraft's orientation
-        effective_thrust_x = math.cos(orientation_radians) * net_horizontal_force + math.sin(orientation_radians) * net_vertical_force
+        effective_thrust_x = -math.cos(orientation_radians) * net_horizontal_force + math.sin(orientation_radians) * net_vertical_force
         effective_thrust_y = math.sin(orientation_radians) * net_horizontal_force + math.cos(orientation_radians) * net_vertical_force
         
         # Update velocities based on the effective thrust forces in the inertial frame
-        x_velocity += effective_thrust_x * dt
-        y_velocity += (effective_thrust_y + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
+        x_velocity += effective_thrust_x * dt *control_pos_st
+        y_velocity += (effective_thrust_y *control_pos_st + MARS_GRAVITY) * dt  # Including gravity in the vertical velocity update
         
         # Fuel consumption is based on the total thrust exerted by all thrusters
         total_thrust = (abs(left_wing_vertical_force) + abs(right_wing_vertical_force) + 
                         abs(top_horizontal_force) + abs(bottom_horizontal_force))
         fuel_remaining -= 1/total_fuel_time
-    else:
-        thrust_x = 0.0
-        thrust_y = 0.0
 
 
 
@@ -313,31 +326,64 @@ def update_position(dt):
     x_position += x_velocity * dt
     y_position += y_velocity * dt
 
+# def draw_environment(screen):
+#     """
+#     Draws the Martian surface on the Pygame screen.
+
+#     Customize this function to create a more visually appealing environment:
+#     - Use an image for the Martian surface.
+#     - Draw a polygon with a gradient to represent the Martian terrain.
+#     - Add craters, rocks, and other Martian features (optional).
+#     """
+#     # Fill the background with a gradient color (e.g., reddish-brown)
+#     pygame.draw.rect(screen, (100, 50, 0), (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+
+#     # Optionally, add some Martian features (e.g., craters, rocks, etc.)
+#     # You can use additional functions to draw these features
+
+#     # Example: Draw a large crater
+#     pygame.draw.circle(screen, (150, 100, 50), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 100)
+
+#     # Example: Draw scattered rocks
+#     rock_positions = [(200, 300), (400, 250), (600, 350)]
+#     for rock_x, rock_y in rock_positions:
+#         pygame.draw.circle(screen, (120, 80, 40), (rock_x, rock_y), 10)
+
+#     # Example: Add texture to the surface (e.g., subtle noise pattern)
+#     # You can create a custom texture or use an image
+
+#     # Remember to adjust colors, sizes, and positions to achieve the desired look
+
 
 def draw_environment(screen):
     """
     Draws the Martian surface on the Pygame screen.
 
-    You can customize this function to create a more visually appealing environment.
-    Here are some suggestions:
-        - Use an image for the Martian surface.
-        - Draw a polygon with a gradient to represent the Martian terrain.
-        - Add craters, rocks, and other Martian features (optional).
+    Customize this function to create a more visually appealing environment:
+    - Use an image for the Martian surface.
+    - Draw a polygon with a gradient to represent the Martian terrain.
+    - Add craters, rocks, and other Martian features (optional).
     """
-    screen.fill(BLACK)  # Fill the background with black
-    pygame.draw.rect(screen, RED, (0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50))
+    # Fill the background with a reddish-brown gradient color to represent the Martian surface
+    pygame.draw.rect(screen, (100, 50, 0), (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+
+    # Optionally, add some Martian features (e.g., craters, rocks, etc.)
+    # You can use additional functions to draw these features
+
+    # Example: Draw a large crater
+    pygame.draw.circle(screen, (150, 100, 50), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 100)
+
+    # Example: Draw scattered rocks
+    rock_positions = [(200, 300), (400, 250), (600, 350)]
+    for rock_x, rock_y in rock_positions:
+        pygame.draw.circle(screen, (120, 80, 40), (rock_x, rock_y), 10)
+
+    # Example: Add texture to the surface (e.g., subtle noise pattern)
+    # You can create a custom texture or use an image
+
+    # Remember to adjust colors, sizes, and positions to achieve the desired look
 
 
-
-
-
-
-import pygame
-import math
-
-# Define colors
-WHITE = (255, 255, 255)
-THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 def rotate_point(cx, cy, x, y, angle):
     sin_angle = math.sin(angle)
@@ -398,10 +444,10 @@ def draw_thrusters_effect(screen, spacecraft_position, spacecraft_orientation, t
         'left_wing_down': {'offset': (-10, 5), 'angle': -90},
         'right_wing_up': {'offset': (10, 5), 'angle': 90},
         'right_wing_down': {'offset': (10, 5), 'angle': -90},
-        'top_left': {'offset': (0, 20), 'angle': 180},
-        'top_right': {'offset': (0, 20), 'angle': 0},
-        'bottom_left': {'offset': (0, -5), 'angle': 180},
-        'bottom_right': {'offset': (0, -5), 'angle': 0}
+        'top_left': {'offset': (0, 15), 'angle': 180},
+        'top_right': {'offset': (0, 15), 'angle': 0},
+        'bottom_left': {'offset': (0, -22), 'angle': 180},
+        'bottom_right': {'offset': (0, -22), 'angle': 0}
     }
 
     for thruster, power in thruster_powers.items():
