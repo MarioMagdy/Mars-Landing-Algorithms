@@ -11,12 +11,12 @@ class IMU:
         self.lander = lander
         self.current_acceleration = np.array([0.0, 0.0])
         self.last_velocity = np.array([0.0, 0.0])
-        self.spacecraft_orientation = np.array([0.0, 0.0])
+        self.last_euler_angle = np.array([0.0, 0.0])
         self.current_change_rate_of_euler_angle = np.array([0.0, 0.0])
 
     def start(self):
         # Assuming 'get_euler_angles' is a method that retrieves the Euler angles
-        self.pacecraft_orientation = self.get_euler_angles()
+        self.last_euler_angle = self.get_euler_angles()
 
     def fixed_update(self, delta_time):
         # Accelometer Sensor code & Gyroscope Sensor Code calculated from change rate of velocity vector & change rate of Euler Angles
