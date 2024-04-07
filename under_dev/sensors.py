@@ -34,7 +34,7 @@ my_imu = IMU("Mars Lander")
 
 my_imu.start()
 
-delta_time = 1
+delta_time = 3 
 
 my_imu.fixed_update(delta_time)
 
