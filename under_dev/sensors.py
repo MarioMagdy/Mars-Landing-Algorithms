@@ -27,14 +27,14 @@ class IMU:
         self.last_euler_angle = current_euler_angle
 
     def get_euler_angles(self):
-        # Placeholder for getting Euler angles
+
         return np.array([0.0, 0.0])  # Dummy values for demonstration
 
 my_imu = IMU("Mars Lander")
 
 my_imu.start()
 
-delta_time = 1
+delta_time = 3
 
 my_imu.fixed_update(delta_time)
 
