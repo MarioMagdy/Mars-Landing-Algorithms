@@ -24,7 +24,7 @@ def update_orientation(dt):
     orientation_change = (net_vertical_force_difference + net_horizontal_force_difference) * dt * 0.05  # Arbitrary value for rotation sensitivity
 
     # Update the spacecraft orientation based on the combined orientation changes
-    spacecraft_orientation += orientation_change
+    spacecraft_orientation += orientation_change # SO THIS IS THE BANK ANGEL THEN????
 
 # Define initial spacecraft orientation and thruster powers
 spacecraft_orientation = 2 # Initial orientation in degrees
