@@ -69,6 +69,6 @@ delta_time = 3
 
 my_imu.fixed_update(delta_time)
 
-print("Current Acceleration:", my_imu.current_acceleration)
+print("Current Acceleration:", my_imu.current_acceleration[0])
 
 
