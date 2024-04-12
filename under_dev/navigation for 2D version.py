@@ -1,9 +1,8 @@
 import numpy as np
 
-#Example of readings
-accel_data = np.array([[-0.1147, -0.1304, 0.9873], [-0.12, -0.42, 0.95], [-0.5, 0, 0.60]])
-gyro_data = np.radians(np.array([[85, 90, 43], [20, 40, 40],[10, 0, 40]]))
-
+# Example of readings
+accel_data = np.array([[-0.1147, -0.1304], [-0.12, -0.42], [-0.5, 0]])
+gyro_data = np.radians(np.array([[85, 90, 43], [20, 40, 40], [10, 0, 40]]))
 
 # Constants
 G = 3.44  # Acceleration due to gravity (m/s^2)
