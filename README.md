@@ -8,6 +8,9 @@
 
 ![](https://github.com/MarioMagdy/Mars-landing-algorithms/blob/main/Assets/giphy.gif).
 
+### Some of the physics simulations that we do
+![](https://github.com/MarioMagdy/Mars-landing-algorithms/blob/main/Assets/simu1.gif). 
+
 
 ### As a team member of the GP graduation project you need to work with this repo while developing your algos and help organized it 
 - Guidance
