@@ -364,8 +364,8 @@ def draw_environment(screen):
 
     
     # Load the Mars surface texture (replace 'mars_texture.png' with your image file)
-    mars_texture = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_texture.png').convert_alpha()
-    mars_background = pygame.image.load(r'Mars-landing-algorithms\under_dev\drawing_v0_2\docs\mars_background.png').convert_alpha()
+    mars_texture = pygame.image.load(r'Older_versions\drawing_v0_2\docs\mars_texture.png').convert_alpha()
+    mars_background = pygame.image.load(r'Older_versions\drawing_v0_2\docs\mars_background.png').convert_alpha()
     # Create a copy of the texture with adjusted opacity (60%)
     textured_surface = mars_texture.copy()
     textured_surface.set_alpha(120)  # 60% opacity (255 * 0.6)
