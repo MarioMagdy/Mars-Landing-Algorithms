@@ -1,12 +1,10 @@
 import numpy as np
 
-initial_horizontal_velocity = 200  # m/s (positive to the right)
-initial_vertical_velocity = 5000
+initial_horizontal_velocity = -10  # m/s (positive to the right)
+initial_vertical_velocity = 444.0 
 x_velocity = initial_horizontal_velocity
 y_velocity = initial_vertical_velocity
 vel_vector = np.array([x_velocity, y_velocity])
-
-
 class IMU:
     def __init__(self, lander):
         self.lander = lander
@@ -27,10 +25,6 @@ my_imu = IMU("Mars Lander")
 delta_time = 3 
 
 my_imu.fixed_update(delta_time)
-
-print("Current Acceleration:", my_imu.current_acceleration)
-
-
 
 
 
@@ -69,13 +63,15 @@ top_right_thruster_power = 25.0
 bottom_left_thruster_power = 20.0
 bottom_right_thruster_power = 30
 
-
+# Define the time step
 dt = 0.1  # Time step in seconds
+
+# Call the update_orientation function with the time step
 update_orientation(dt)
 
+# Print the updated spacecraft orientation
 
 
-print("Updated spacecraft orientation:", spacecraft_orientation)
 
 
 
@@ -106,9 +102,7 @@ def complementary_filter(accel_data, gyro_data, alpha, beta):
     gyro_filtered = beta * gyro_integration
     fused_data = accel_filtered + gyro_filtered
     return fused_data
-#test if its working
-fused_data = complementary_filter(accel_data, gyro_data, alpha, beta)
-#print(fused_data)
+fused_data= complementary_filter(accel_data, gyro_data, alpha, beta)
 
 def integrate_rk4(fused_data, velocity, position):
     # Runge-Kutta 4th order integration to calculate velocity and position
@@ -125,8 +119,8 @@ def integrate_rk4(fused_data, velocity, position):
     position += (k1p + 2*k2p + 2*k3p + k4p) / 6
 
     return velocity, position
-leeh = integrate_rk4(fused_data, velocity, position)
-print(leeh)
+p =integrate_rk4(fused_data, velocity, position)
+print(p)
 
 # Main loop for estimation
 for i in range(1, len(accel_data)):  # Assuming data is synchronized
@@ -139,6 +133,6 @@ for i in range(1, len(accel_data)):  # Assuming data is synchronized
     # Update attitude estimation (for 2D, yaw angle is updated)
     attitude += gyro_data[i] * dt  # Update yaw angle
     
-    
-
-
+    print("Body Velocity:", velocity)
+    print("Body Position:", position)
+    print("Body Attitude (Yaw angle):", np.degrees(attitude))
