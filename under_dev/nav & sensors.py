@@ -28,7 +28,7 @@ delta_time = 3
 
 my_imu.fixed_update(delta_time)
 
-print("Current Acceleration:", my_imu.current_acceleration)
+#print("Current Acceleration:", my_imu.current_acceleration)
 
 
 
@@ -75,14 +75,14 @@ update_orientation(dt)
 
 
 
-print("Updated spacecraft orientation:", spacecraft_orientation)
+#print("Updated spacecraft orientation:", spacecraft_orientation)
 
 
 
 
 
 # Example of readings
-accel_data = np.array(my_imu.current_acceleration)
+accel_data = np.array([my_imu.current_acceleration])
 gyro_data = np.radians(np.array([spacecraft_orientation,0.0,0.0]))
 
 # Constants
@@ -104,6 +104,7 @@ def complementary_filter(accel_data, gyro_data, alpha, beta):
     accel_filtered = alpha * accel_data
     gyro_integration = np.cumsum(gyro_data, axis=0) * dt
     gyro_filtered = beta * gyro_integration
+    print(gyro_integration)
     print(accel_filtered)
     print("lolll" ,gyro_filtered)
     fused_data = accel_filtered + gyro_filtered
@@ -120,12 +121,10 @@ def integrate_rk4(fused_data, velocity, position):
     k2v = (fused_data + 0.5 * k1v) * dt
     k3v = (fused_data + 0.5 * k2v) * dt
     k4v = (fused_data + k3v) * dt
-    print(k1v)
-    print(k2v)
-    print(k3v)
-    print(k4v)
-
     velocity += (k1v + 2*k2v + 2*k3v + k4v) / 6
+    print("ko",k2v)
+    print("lllllllllo",k3v)
+
 
     k1p = velocity * dt
     k2p = (velocity + 0.5 * k1p) * dt
@@ -134,8 +133,6 @@ def integrate_rk4(fused_data, velocity, position):
     position += (k1p + 2*k2p + 2*k3p + k4p) / 6
 
     return velocity, position
-leeh = integrate_rk4(fused_data, velocity, position)
-print(leeh)
 
 # Main loop for estimation
 for i in range(1, len(accel_data)):  # Assuming data is synchronized
@@ -147,6 +144,14 @@ for i in range(1, len(accel_data)):  # Assuming data is synchronized
 
     # Update attitude estimation (for 2D, yaw angle is updated)
     attitude += gyro_data[i] * dt  # Update yaw angle
+    
+    
+#print("ll",velocity)
+print(position)
+print(attitude)
+print(fused_data)
+
+    
     
     
 
