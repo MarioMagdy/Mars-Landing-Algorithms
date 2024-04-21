@@ -82,7 +82,7 @@ update_orientation(dt)
 
 
 # Example of readings
-accel_data = my_imu.current_acceleration
+accel_data = np.array([my_imu.current_acceleration])
 gyro_data = np.radians(np.array([spacecraft_orientation,0.0,0.0]))
 
 #print("sheet ",accel_data)
