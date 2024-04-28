@@ -523,17 +523,18 @@ def rotate_point(cx, cy, x, y, angle):
     return x_new, y_new
 
 
-
+### v4.1 changes:
 def draw_spacecraft(screen, x, y, angle):
     # Define the spacecraft shape with more details
     points = [
-        (x, y - 30),  # Tip of the spacecraft (nose)
-        (x - 5, y - 10),  # Start of left wing
-        (x - 15, y + 10),  # End of left wing
-        (x - 5, y + 15),  # Left base rear
-        (x + 5, y + 15),  # Right base rear
-        (x + 15, y + 10),  # End of right wing
-        (x + 5, y - 10),  # Start of right wing
+        (x+2, y - 8),  # Tip of the spacecraft (nose)
+        (x-2, y - 8),  # Tip of the spacecraft (nose)
+        (x - 10, y - 2),  # Start of left wing
+        (x - 20, y + 7),  # End of left wing
+        (x - 7, y + 15),  # Left base rear
+        (x + 7, y + 15),  # Right base rear
+        (x + 20, y + 7),  # End of right wing
+        (x + 10, y - 2),  # Start of right wing
     ]
     
     # Rotate each point around the spacecraft's center to get the correct orientation
@@ -546,11 +547,12 @@ def draw_spacecraft(screen, x, y, angle):
     pygame.draw.polygon(screen, WHITE, rotated_points)
 
     # Draw the cockpit as a circle
-    cockpit_center = rotate_point(x, y, x, y - 20, math.radians(angle))
-    pygame.draw.circle(screen, (0, 255, 0), cockpit_center, 5)
+    cockpit_center = rotate_point(x, y, x, y, math.radians(angle))
+    pygame.draw.circle(screen, (0, 255, 0), cockpit_center, 4)
 
     # Optionally, draw flames for the thrusters if they are active
     # This would be done in the draw_thrusters_effect function, using similar principles
+
 
 
 def draw_thrusters_effect(screen, spacecraft_position, spacecraft_orientation, thruster_powers):
