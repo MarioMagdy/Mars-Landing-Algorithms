@@ -13,14 +13,14 @@ import pymunk.pygame_util
 # To make it more accurate we can make the gravity to the center of the planet not downwards so the orbiting effect can happen
 slower= 1000
 time_from_start = 0
-
+fps = 60
 
 # Define colors
 WHITE = (255, 255, 255)
 THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Constants
-MARS_GRAVITY = -3.71  # m/s^2
+MARS_GRAVITY = 3.71  # m/s^2
 
 ## TODO: Should be affected by the oriantaion
 AIR_RESISTANCE_COEFF = 3 # (adjustable for different air densities) 
@@ -38,7 +38,7 @@ initial_altitude = 120000.0  # meters
 # TODO: Get the accurate velocities
 # total vel = 5333 = sqrt(initial_horizontal_velocity^2 + initial_vertical_velocity^2)
 initial_horizontal_velocity = 100.0  # m/s (positive to the right)
-initial_vertical_velocity = -533.0  # m/s (negative for downward)
+initial_vertical_velocity = 533.0  # m/s (negative for downward)
 max_thrust = 100.0  # m/s^2
 spacecraft_mass = 1025  # kg
 fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
@@ -63,6 +63,10 @@ WHITE = (255, 255, 255)
 RED = (133, 40, 20)  # For crash landing
 YELLOW = (255, 255, 0)  # For successful landing
 GREY = (170, 170, 170) # For
+MARS_SURFACE_COLOR = (115, 55, 0)  # Rusty Mars surface color
+ATMOSPHERE_COLOR = (255, 200, 180, 40)  # Semi-transparent white for atmosphere
+THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
+
 
 # New global variable for spacecraft orientation (in degrees)
 spacecraft_orientation = 0.0
@@ -75,8 +79,6 @@ control_ori_st= 0.08
 control_pos_st= 0.001
 
 
-# Define colors for the thruster effects
-THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 
 # Example usage:
 # Assuming 'screen' is your Pygame display surface and 'spacecraft_position' is the current position of your spacecraft
@@ -93,26 +95,6 @@ thruster_powers = {
 
 
 
-get_spacecraft_points = lambda x,y:[
-        (x+2, y - 8),  # Tip of the spacecraft (nose)
-        (x-2, y - 8),  # Tip of the spacecraft (nose)
-        (x - 10, y - 2),  # Start of left wing
-        (x - 20, y + 7),  # End of left wing
-        (x - 7, y + 15),  # Left base rear
-        (x + 7, y + 15),  # Right base rear
-        (x + 20, y + 7),  # End of right wing
-        (x + 10, y - 2),  # Start of right wing
-    ]
-    
-
-
-
-# Constants for colors (you can adjust these)
-BLACK = (0, 0, 0)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-MARS_SURFACE_COLOR = (115, 55, 0)  # Rusty Mars surface color
-ATMOSPHERE_COLOR = (255, 200, 180, 40)  # Semi-transparent white for atmosphere
 
 
 
@@ -349,7 +331,6 @@ def apply_air_resistance_v2(dt):
     # Adjust drag coefficients based on Mach number (placeholder values)
     drag_coefficient_x = calculate_drag_coefficient(x_velocity / 240)  # Adjust for Mars speed of sound
     drag_coefficient_y = calculate_drag_coefficient(y_velocity / 240)
-    # TODO: add bank angle
     # Calculate air resistance forces
     air_resistance_force_x = -0.5 * density * drag_coefficient_x * np.pi * (x_velocity**2) *AIR_RESISTANCE_COEFF 
     air_resistance_force_y = 0.5 * density * drag_coefficient_y * np.pi * (y_velocity**2) * AIR_RESISTANCE_COEFF # cos bank angle
@@ -384,13 +365,6 @@ def update_position(dt):
 
 
 
-# Constants for colors (you can adjust these)
-BLACK = (0, 0, 0)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-MARS_SURFACE_COLOR = (115, 55, 0)  # Rusty Mars surface color
-ATMOSPHERE_COLOR = (255, 200, 180, 40)  # Semi-transparent white for atmosphere
-alphas = [ (220/np.power(i+2,0.3)) for i in range(atmo_layering_number)]
 
 
 
@@ -512,13 +486,7 @@ def create_spacecraft_body(space, mass, moment, points):
     space.add(body, shape)
     return body
 
-# Calculate the moment of inertia for the polygon shape
-spacecraft_points = [(2, -8), (-2, -8), (-10, -2), (-20, 7), (-7, 15), (7, 15), (20, 7), (10, -2)]
 
-spacecraft_moment = pymunk.moment_for_poly(spacecraft_mass, spacecraft_points)
-
-# Create the spacecraft body with the calculated moment and the points defining the shape
-spacecraft_body = create_spacecraft_body(space, spacecraft_mass, spacecraft_moment, spacecraft_points)
 
 # ... (rest of the game loop)
 
@@ -575,7 +543,6 @@ crashed = False
 c= 0 
 c_c1 = 0
 c_c2 = 0
-
 air =[]
 
 
@@ -600,13 +567,14 @@ while running:
     # Draw everything
     screen.fill(BLACK)
     draw_environment(screen)
-
     pygame.display.flip()
+
 
 pygame.quit()
 
 options = pymunk.pygame_util.DrawOptions(screen)
-space.debug_draw(options)
+
+
 
 import pygame
 import pymunk
@@ -616,6 +584,21 @@ import pymunk.pygame_util
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 space = pymunk.Space()
+
+
+
+
+
+# Calculate the moment of inertia for the polygon shape
+spacecraft_points = [(2, -8), (-2, -8), (-10, -2), (-20, 7), (-7, 15), (7, 15), (20, 7), (10, -2)]
+
+spacecraft_moment = pymunk.moment_for_poly(spacecraft_mass, spacecraft_points)
+
+# Create the spacecraft body with the calculated moment and the points defining the shape
+spacecraft_body = create_spacecraft_body(space, spacecraft_mass, spacecraft_moment, spacecraft_points)
+
+
+
 
 
 while running:
@@ -667,10 +650,9 @@ while running:
     spacecraft_x = int(x_position / SCALE)  # Convert x-position to screen coordinates
     spacecraft_y = SCREEN_HEIGHT - int(y_position / SCALE)  # Y-axis flipped for visual representation
 
-    spacecraft_points = get_spacecraft_points(spacecraft_x,spacecraft_y)
+    # spacecraft_points = get_spacecraft_points(spacecraft_x,spacecraft_y)
 
 
-    create_spacecraft_body(space, spacecraft_x, spacecraft_y,spacecraft_orientation,spacecraft_points)
     draw_thrusters_effect(screen, [spacecraft_x,spacecraft_y], spacecraft_orientation, thruster_powers)
 
 
@@ -722,5 +704,11 @@ while running:
     if landed or crashed:
         pygame.time.wait(3000)  # Wait for 3 seconds before quitting
         running = False
+
+    space.debug_draw(options)
+    space.step(dt)
+    screen.blit(text, (15, 15))
+    pygame.display.flip()
+    clock.tick(fps)
 
 pygame.quit()
