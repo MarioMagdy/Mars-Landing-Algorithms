@@ -91,8 +91,6 @@ c_c2 = 0
 air =[]
 
 
-
-
 space.gravity = (0, 0.01)  # Set gravity for the simulation
 pymunk.pygame_util.positive_y_is_up = False
 
@@ -134,9 +132,6 @@ while running:
 
 
     envi_utils.apply_thrust(spacecraft_body, dt, max_thrust, control_ori_st, total_fuel_time, fuel_remaining)
-
-    
-    # envi_utils.update_position(dt)
 
     # Draw environment and spacecraft
     envi_utils.draw_environment(screen)
@@ -188,7 +183,6 @@ while running:
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         screen.blit(text, text_rect)
 
-    pygame.display.flip()  # Update the display
 
     # Exit the loop after landing or crash
     if landed or crashed:
