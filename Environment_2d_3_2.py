@@ -3,6 +3,19 @@ import math
 import numpy as np
 
 
+## fixing the air resistance problem
+""" 
+first we need to fix "LD_C =10"
+it's about 0.24
+it needs to be variable with orintation as the sc is not semitric, 
+it is used to find ralation between the lift and drag forces generated due
+to the air particals bombarding the sc
+Apply in  
+
+
+"""
+
+
 ###TODO: 
 # To make it more accurate we can make the gravity to the center of the planet not downwards so the orbiting effect can happen
 slower= 1000
@@ -18,7 +31,7 @@ THRUSTER_EFFECT_COLOR = (255, 255, 0)  # Yellow color for visibility
 # Constants
 MARS_GRAVITY = -3.71  # m/s^2
 
-## TODO: Should be affected by the oriantaion
+## TODO: Should be affected by the oriantaion and fixed
 AIR_RESISTANCE_COEFF = 3 # (adjustable for different air densities) 
 LD_C = 10 # (adjustable)
 
