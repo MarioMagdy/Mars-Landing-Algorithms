@@ -21,7 +21,6 @@ class MarsEntryGuidance:
         self.base_temperature = -63 # in °C, approximate average surface temperature
         # Target point and tolerance
         self.target_x = 0
-        self.target_y = 0
         self.target_z = 10000
         self.tolerance = 0.1
 
@@ -33,17 +32,17 @@ class MarsEntryGuidance:
         # Initial state (placeholder)
         self.state = None
 
-    def set_initial_state(self, x, y, z, vx, vy, vz):
+    def set_initial_state(self, x, z, vx, vz):
         """
         Sets the initial state of the spacecraft.
         """
-        self.state = np.array([x, y, z, vx, vy, vz])
+        self.state = np.array([x, z, vx, vz])
 
     def reference_bank_angle(self,  state, ):
         """Bank angle function for open loop guidance that simply returns
            the reference bank angle"""
-        x, y, z, vx, vy, vz = state
-        v= np.sqrt(vx**2+vy**2+vz**2)
+        x, z, vx, vz = state
+        v= np.sqrt(vx**2+vz**2)
         if v >= 3500:
             return np.deg2rad(75)
         elif v <= 1500:
@@ -137,11 +136,11 @@ class MarsEntryGuidance:
         """
         Updates the state of the spacecraft based on the dynamics model.
         """
-        x, y, z, vx, vy, vz = state
+        x, z, vx, vz = state
 
         # Compute forces
-        v= np.sqrt(vx**2+vy**2+vz**2)
-        gamma = np.arctan2(state[5], state[3])
+        v= np.sqrt(vx**2+vz**2)
+        gamma = np.arctan2(vz, vx)
         gravity = self.G * self.mass / (z + self.R_mars)**2
         mach = self.mach_num(v=v,altitude=z)  # Calculate Mach number based on temperature
         alpha = np.radians(bank_angle)  # Assume angle of attack equals bank angle
@@ -150,9 +149,8 @@ class MarsEntryGuidance:
         lift = 0.5 * self.C_l(mach, alpha) * self.A_ref ()* self.rho(z) * v**2# * np.cos(bank_angle)
 
         acc_x = drag * vx / v
-        acc_y = drag * vy / v + lift * np.sin(bank_angle)
         acc_z = -gravity + drag * vz / v + lift * np.cos(bank_angle)
-        acc = np.array([acc_x, acc_y, acc_z])
+        acc = np.array([acc_x, acc_z])
         # another way to compute new state is by integration for the acc using the update state function:
         new_state=self.update_state(state,acc,self.dt)
         L_D=lift/drag
@@ -164,7 +162,7 @@ class MarsEntryGuidance:
         Predicts the state of the spacecraft at the target point using the current bank angle.
         """
         predicted_state = state
-        while predicted_state[2] > self.target_z:
+        while predicted_state[1] > self.target_z:
             predicted_state = self.dynamics_model(predicted_state, bank_angle)[0]
         return predicted_state
 
@@ -174,19 +172,20 @@ class MarsEntryGuidance:
             """
            
             # Target Range-to-go (the downrange distance remaining between the spacecraft's current position and the target landing point.)
-            R = np.sqrt((self.target_x-state[0])**2 + (self.target_y-state[2])**2)
-            x, y, z, vx, vy, vz = state
+            x, z, vx,  vz = state
+            R = np.sqrt((self.target_x-x)**2 + (self.target_z-z)**2)
 
 
-            v= np.sqrt(vx**2+vy**2+vz**2)
+
+            v= np.sqrt(vx**2+vz**2)
 
             # Flight path angle
-            gamma = np.arctan2(state[5], state[3])
+            gamma = np.arctan2(vz, vx)
             # Lift-to-drag ratio
             L_D_R = 0.24
 
             # Predicted range-to-go
-            R_p = np.sqrt(( predicted_state[0]-state[0])**2 + ( predicted_state[2]-state[2])**2)
+            R_p = np.sqrt(( predicted_state[0]-x)**2 + ( predicted_state[2]-z)**2)
 
             # Desired vertical component of lift-to-drag ratio
             L_D_v = L_D_R*np.sin(gamma)+self.K_downrange * (R-R_p) / v 
@@ -207,7 +206,7 @@ class MarsEntryGuidance:
 
             bank_angle = self.reference_bank_angle(self.state)
 
-            while self.state[2] > self.target_z:
+            while self.state[1] > self.target_z:
                 print('working')
                
                 print(f'{self.state}')
@@ -224,5 +223,5 @@ class MarsEntryGuidance:
                 return bank_angle
             
 MNG= MarsEntryGuidance(mass=800)
-MNG.set_initial_state(250e3, 120e3, 210e3, -5500.0, 3200.0, -1700.0)
+MNG.set_initial_state(250e3, 210e3, -5500.0, -1700.0)
 MNG.guide()
