@@ -5,7 +5,7 @@ import random
 
 ###TODO: 
 # To make it more accurate we can make the gravity to the center of the planet not downwards so the orbiting effect can happen
-slower= 1000
+slower= 800
 
 atmo_layering_number = 15
 
@@ -35,8 +35,8 @@ initial_altitude = 120000.0  # meters
 
 # TODO: Get the accurate velocities
 # total vel = 5333 = sqrt(initial_horizontal_velocity^2 + initial_vertical_velocity^2)
-initial_horizontal_velocity = 100.0  # m/s (positive to the right)
-initial_vertical_velocity = -533.0  # m/s (negative for downward)
+initial_horizontal_velocity = 330.0  # m/s (positive to the right)
+initial_vertical_velocity = -433.0  # m/s (negative for downward)
 max_thrust = 100.0  # m/s^2
 spacecraft_mass = 1025  # kg
 fuel_mass = 100.0  # kg # Hard to calculate real number so this is going to be arbtirary number 
@@ -612,6 +612,9 @@ c_c2 = 0
 desired_orintation = 0
 error_tolrated=2
 
+# cam = pygame.camera.Camera("/video0", (SCREEN_WIDTH, SCREEN_HEIGHT))
+# cam.start()
+
 
 while running:
     c+=1
@@ -701,7 +704,12 @@ while running:
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         screen.blit(text, text_rect)
 
+
+    # pygame.display.scre
     pygame.display.flip()  # Update the display
+
+    # filename = "Snaps/%04d.png" % c
+    # pygame.image.save(image, filename)
 
     # Exit the loop after landing or crash
     if landed or crashed:
