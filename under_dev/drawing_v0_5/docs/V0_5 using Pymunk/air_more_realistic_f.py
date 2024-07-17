@@ -142,7 +142,7 @@ def create_air(space, n=1000, size=2, mass=0.01, expiry_distance=700, standard_s
 #     return air_particles
 
 
-def maintain_air(air, space, c, pos=(200, 200), generate_every=100, required_av_air=500,
+def maintain_air(air, space, c, pos=(200, 200), generate_every=30, required_av_air=1000,
                             normal_n=100, expiry_distance=700, vel_rand_factor=1.5, pos_rand_factor=1.5,
                             standerd_speed=1.5):
     # Update air particles and remove expired ones

@@ -24,7 +24,7 @@ SCALE = 200  # meters per pixel (adjust for visual representation)
 
 
 # User input (replace with prompts and error handling)
-initial_altitude = 120000.0  # meters
+initial_altitude = 60000.0  # meters
 
 # TODO: Get the accurate velocities
 # total vel = 5333 = sqrt(initial_horizontal_velocity^2 + initial_vertical_velocity^2)
@@ -42,7 +42,7 @@ control_pos_st= 0.001
 
 
 # Simulation variables
-x_position = SCALE*100  # meters
+x_position = SCALE*100*2.5  # meters
 y_position = initial_altitude  # meters (matches initial altitude)
 x_velocity = initial_horizontal_velocity
 y_velocity = initial_vertical_velocity
@@ -94,10 +94,10 @@ thruster_powers = {
 
 
 ######## AIR 
-normal_n = 300
+normal_n =500
 expiry_distance = 20
-required_av_air = 800
+required_av_air = 2000
 pos_rand_factor=1
 vel_rand_factor=0.5
-standerd_speed = 0.01
-generate_every = 5 # frames
+standerd_speed = 0.001
+generate_every = 3 # frames
